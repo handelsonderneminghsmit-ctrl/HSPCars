@@ -397,25 +397,17 @@ async function rdwOpzoeken(){
   try{
     // ── 5 RDW endpoints parallel ──────────────────────────────────────────
     // m9d7-ebf2 = voertuig basis (merk, model, inrichting, deuren, cc, datum)
-    // sgfe-77wx = APK vervaldatum
     // 8ys7-d773 = brandstof per voertuig (brandstof_omschrijving, nettomaximumvermogen in kW)
     // 3huj-srit = as/rijden (aantal_assen, wielbasis — géén transmissie)
     // Kleur zit in basisdata m9d7-ebf2 als eerste_kleur
-    const[basis,apk,brand,as3]=await Promise.all([
+    const[basis,brand,as3]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
-      Promise.all([
-        safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
-        safe(`https://opendata.rdw.nl/resource/2za2-nh4p.json?kenteken=${raw}&$order=datum_inschrijving+DESC&$limit=1`),
-      ]).then(([a,b])=>a.length?a:b.length?b:[]),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
     ]);
 
     if(!basis.length){setMsg('Geen voertuig gevonden voor dit kenteken','err');return;}
     const v=basis[0];
-    // DEBUG: log alle velden van alle endpoints
-    console.log('BASIS alle velden:', JSON.stringify(v));
-    console.log('APK endpoint:', JSON.stringify(apk[0]||{}));
 
     // ── Basis velden ──────────────────────────────────────────────────────
     const merk=tc(v.merk||'');
@@ -425,7 +417,6 @@ async function rdwOpzoeken(){
     const _datRaw=v.datum_eerste_toelating||v.datum_tenaamstelling||'';
     const _datStr=String(_datRaw).replace(/\D/g,'').slice(0,8);
     const jaar=_datStr.length>=4?_datStr.slice(0,4):'';
-    console.log('Jaar raw:', _datRaw, '→', jaar);
 
     sf('f-kenteken',raw);
     sf('f-merk',merk);
@@ -508,11 +499,9 @@ async function rdwOpzoeken(){
     }
 
     // ── APK ───────────────────────────────────────────────────────────────
-    // Probeer APK uit sgfe-77wx endpoint, daarna uit basisdata
+    // vervaldatum_apk zit direct in basisdata m9d7-ebf2 (bv. "20270322")
     {
-      const apkRaw=apk.length
-        ? (apk[0].vervaldatum_apk||apk[0].vervaldatum_keuring||apk[0].vervaldatum_apk_dt||'')
-        : (v.vervaldatum_apk||v.apk_vervaldatum||'');
+      const apkRaw=v.vervaldatum_apk||v.vervaldatum_apk_dt||'';
       if(apkRaw){
         const s=String(apkRaw).replace(/[^0-9]/g,'').slice(0,8);
         if(s.length===8){
