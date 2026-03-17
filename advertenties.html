@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HS Performance — Aanbod</title>
+<meta name="description" content="Bekijk ons actuele aanbod van performance en luxe voertuigen bij HS Performance.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#080808;--dark:#0e0e0e;--dark2:#141414;--dark3:#1c1c1c;--dark4:#242424;
+  --border:#2a2a2a;--border2:#363636;--text:#f2f2f2;--text2:#9a9a9a;--text3:#555;
+  --red:#cc1818;--red2:#e01e1e;--red-dim:rgba(204,24,24,0.12);
+  --green:#22c55e;--orange:#f59e0b;--r:4px;--r2:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:var(--black);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── TOPBAR & HEADER ── */
+.topbar{background:var(--red);height:3px}
+header{background:var(--dark);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
+.hdr{max-width:1400px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;gap:1rem}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-mark{width:38px;height:38px;background:var(--red);clip-path:polygon(10% 0%,100% 0%,90% 100%,0% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:.02em}
+.logo-text{display:flex;flex-direction:column;gap:1px}
+.logo-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.06em;color:var(--text);line-height:1}
+.logo-sub{font-size:9px;font-weight:500;letter-spacing:.18em;color:var(--red);text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:1rem}
+.hdr-tel{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.hdr-tel svg{flex-shrink:0;color:var(--red)}
+.btn-cms{background:transparent;border:1px solid var(--border2);color:var(--text2);font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r);cursor:pointer;text-decoration:none;transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn-cms:hover{color:var(--text);border-color:var(--text3)}
+
+/* ── HERO ── */
+.hero{background:var(--dark2);border-bottom:1px solid var(--border);padding:3rem 2rem}
+.hero-inner{max-width:1400px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.hero-left h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,64px);font-weight:800;letter-spacing:.03em;text-transform:uppercase;line-height:.95;margin-bottom:.5rem}
+.hero-left h1 span{color:var(--red)}
+.hero-left p{font-size:14px;color:var(--text2);max-width:420px;line-height:1.7}
+.hero-stats{display:flex;gap:2.5rem}
+.stat-item{text-align:right}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--red);line-height:1}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+
+/* ── FILTER BAR ── */
+.filterbar{background:var(--dark2);border-bottom:1px solid var(--border);position:sticky;top:64px;z-index:100}
+.filterbar-inner{max-width:1400px;margin:0 auto;padding:.75rem 2rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.srch-wrap{position:relative;flex:1;min-width:200px}
+.srch-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
+.srch{width:100%;background:var(--dark3);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px 9px 36px;color:var(--text);font-size:14px;outline:none;font-family:'Barlow',sans-serif;transition:border-color .15s}
+.srch:focus{border-color:var(--red)}
+.filter-sel{background:var(--dark3);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;color:var(--text2);font-size:13px;outline:none;font-family:'Barlow',sans-serif;cursor:pointer;transition:border-color .15s}
+.filter-sel:focus{border-color:var(--red)}
+.filter-sel option{background:var(--dark2)}
+.sort-btn{background:transparent;border:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:9px 14px;border-radius:var(--r);cursor:pointer;font-family:'Barlow',sans-serif;transition:all .12s;white-space:nowrap}
+.sort-btn.active{border-color:var(--red);color:var(--red);background:var(--red-dim)}
+.result-count{font-size:12px;color:var(--text3);font-family:'Share Tech Mono',monospace;white-space:nowrap;margin-left:auto}
+
+/* ── GRID ── */
+.main{max-width:1400px;margin:0 auto;padding:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+
+/* ── CARD ── */
+.card{background:var(--dark2);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .25s;display:flex;flex-direction:column}
+.card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.card-img{height:210px;background:var(--dark3);position:relative;overflow:hidden;border-bottom:1px solid var(--border);flex-shrink:0}
+.card-img .slides{display:flex;width:100%;height:100%;transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.card-img .slide{min-width:100%;height:100%;overflow:hidden;flex-shrink:0}
+.card-img .slide img{width:100%;height:100%;object-fit:cover;display:block}
+.card-img .slide.nophoto{display:flex;align-items:center;justify-content:center;font-size:60px;background:var(--dark3)}
+.card-img .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%);pointer-events:none}
+/* plate */
+.card-plate{position:absolute;bottom:10px;left:12px;display:flex;overflow:hidden;border-radius:3px;border:1px solid rgba(255,255,255,.15);z-index:2}
+.card-plate-flag{background:#003087;width:20px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;padding:2px 0}
+.card-plate-stars{color:#fc0;font-size:5.5px;line-height:1;text-align:center}
+.card-plate-nl{color:#fff;font-size:6.5px;font-weight:700;text-align:center}
+.card-plate-nr{font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:500;padding:0 8px;color:#fff;display:flex;align-items:center;letter-spacing:.08em;background:rgba(0,0,0,.45)}
+/* apk pill */
+.apk-pill{position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:2px;letter-spacing:.05em;text-transform:uppercase;z-index:2}
+.apk-pill.ok{background:rgba(34,197,94,.88);color:#000}
+.apk-pill.warn{background:rgba(245,158,11,.88);color:#000}
+.apk-pill.exp{background:rgba(204,24,24,.88);color:#fff}
+/* photo count badge */
+.photo-count-badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.6);color:var(--text2);font-size:10px;font-family:'Share Tech Mono',monospace;padding:3px 8px;border-radius:2px;z-index:2}
+/* slider controls */
+.sl-prev,.sl-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.55);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:3}
+.card:hover .sl-prev,.card:hover .sl-next{opacity:1}
+.sl-prev{left:8px}.sl-next{right:8px}
+.sl-dots{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:2}
+.sdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.35);cursor:pointer;transition:background .15s}
+.sdot.on{background:#fff}
+
+/* card body */
+.card-body{padding:16px;flex:1;display:flex;flex-direction:column}
+.card-name{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;line-height:1;margin-bottom:5px}
+.card-meta{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.card-price{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;color:var(--red);letter-spacing:-.01em;margin-bottom:10px;margin-top:auto}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.tag{font-size:10px;padding:3px 7px;background:var(--dark4);color:var(--text2);border-radius:2px}
+.tag.more{color:var(--text3)}
+.card-btn{width:100%;background:var(--red);color:#fff;border:none;border-radius:var(--r);padding:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;margin-top:auto}
+.card-btn:hover{background:var(--red2)}
+
+/* ── DETAIL MODAL ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;overflow-y:auto;padding:2rem 1rem}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--dark2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:960px;overflow:hidden;position:relative;margin:auto}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.6);border:1px solid var(--border2);color:var(--text2);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:all .15s;line-height:1}
+.modal-close:hover{color:var(--text);border-color:var(--text3)}
+
+/* modal gallery */
+.mgal{position:relative;height:420px;background:var(--dark3);overflow:hidden}
+.mgal-slides{display:flex;height:100%;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.mgal-slide{min-width:100%;height:100%;flex-shrink:0}
+.mgal-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.mgal-slide.nophoto{display:flex;align-items:center;justify-content:center;font-size:80px;background:var(--dark3)}
+.mgal-prev,.mgal-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.6);border:1px solid var(--border2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;transition:background .15s}
+.mgal-prev:hover,.mgal-next:hover{background:rgba(0,0,0,.85)}
+.mgal-prev{left:14px}.mgal-next{right:14px}
+.mgal-count{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.6);color:var(--text2);font-size:11px;font-family:'Share Tech Mono',monospace;padding:4px 10px;border-radius:2px;z-index:5}
+.mgal-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:5}
+.mgal-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:background .15s}
+.mgal-dot.on{background:#fff}
+/* thumbnails */
+.mgal-thumbs{display:flex;gap:6px;padding:10px 14px;background:var(--dark3);border-top:1px solid var(--border);overflow-x:auto}
+.mgal-thumb{width:60px;height:45px;flex-shrink:0;border-radius:3px;overflow:hidden;border:2px solid transparent;cursor:pointer;transition:border-color .15s}
+.mgal-thumb:hover{border-color:var(--border2)}
+.mgal-thumb.on{border-color:var(--red)}
+.mgal-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* modal body */
+.modal-body{display:grid;grid-template-columns:1fr 320px;gap:0}
+.modal-main{padding:1.75rem}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;line-height:1;margin-bottom:4px}
+.modal-plate{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--text3);letter-spacing:.08em;margin-bottom:1.25rem}
+.modal-desc{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:1.5rem;border-left:2px solid var(--red);padding-left:14px}
+.specs-title{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.specs-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.specs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.5rem}
+.spec-item{background:var(--dark3);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px}
+.spec-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.spec-val{font-size:14px;font-weight:500;color:var(--text)}
+.opts-title{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.opts-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.opts-wrap{display:flex;flex-wrap:wrap;gap:5px}
+.opt-chip{font-size:11px;padding:4px 9px;background:var(--dark3);color:var(--text2);border:1px solid var(--border);border-radius:3px}
+
+/* modal sidebar */
+.modal-side{background:var(--dark3);border-left:1px solid var(--border);padding:1.75rem;display:flex;flex-direction:column;gap:1rem}
+.modal-price{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;color:var(--red);line-height:1;letter-spacing:-.01em}
+.modal-price-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.modal-apk{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:2px;margin-top:.5rem}
+.apk-ok{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.apk-warn{background:rgba(245,158,11,.12);color:var(--orange);border:1px solid rgba(245,158,11,.2)}
+.apk-exp{background:rgba(255,92,92,.12);color:#ff5c5c;border:1px solid rgba(255,92,92,.2)}
+.divider{height:1px;background:var(--border)}
+.contact-block{display:flex;flex-direction:column;gap:8px}
+.contact-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.btn-contact{background:var(--red);color:#fff;border:none;border-radius:var(--r);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;text-align:center;text-decoration:none;display:block}
+.btn-contact:hover{background:var(--red2)}
+.btn-wa{background:#1a7c39;color:#fff;border:none;border-radius:var(--r);padding:13px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:background .15s;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-wa:hover{background:#22a34a}
+.km-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+.km-badge svg{color:var(--red);flex-shrink:0}
+.modal-date{font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace;margin-top:auto}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:5rem 2rem;color:var(--text3);grid-column:1/-1}
+.empty-icon{font-size:56px;margin-bottom:1rem;opacity:.25}
+.empty strong{display:block;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.empty p{font-size:14px;line-height:1.7}
+
+/* ── SKELETON LOADER ── */
+.skel{border-radius:10px;overflow:hidden;background:var(--dark2);border:1px solid var(--border)}
+.skel-img{height:210px;background:var(--dark3)}
+.skel-body{padding:16px}
+.skel-line{height:14px;background:var(--dark3);border-radius:3px;margin-bottom:10px}
+.skel-line.w60{width:60%}.skel-line.w40{width:40%}.skel-line.w80{width:80%}
+@keyframes shimmer{0%{opacity:.4}50%{opacity:.8}100%{opacity:.4}}
+.skel *{animation:shimmer 1.5s infinite}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);margin-top:4rem;padding:2rem;text-align:center}
+.footer-inner{max-width:1400px;margin:0 auto}
+.footer-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;letter-spacing:.06em;color:var(--text2);margin-bottom:.5rem}
+.footer-logo span{color:var(--red)}
+.footer-sub{font-size:12px;color:var(--text3)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--dark3);color:var(--text);border:1px solid var(--border2);border-radius:var(--r);padding:11px 20px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s;z-index:9999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-left:3px solid var(--green)}
+
+/* ── SPINNER ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* ── RESPONSIVE ── */
+@media(max-width:760px){
+  .hdr{padding:0 1rem}
+  .hero{padding:2rem 1rem}
+  .hero-stats{display:none}
+  .filterbar-inner{padding:.75rem 1rem;gap:8px}
+  .main{padding:1rem}
+  .modal-body{grid-template-columns:1fr}
+  .modal-side{border-left:none;border-top:1px solid var(--border)}
+  .mgal{height:260px}
+  .modal-title{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<header>
+  <div class="hdr">
+    <a href="#" class="logo">
+      <div class="logo-mark"><span>HS</span></div>
+      <div class="logo-text">
+        <div class="logo-name">HS PERFORMANCE</div>
+        <div class="logo-sub">Officieel aanbod</div>
+      </div>
+    </a>
+    <div class="hdr-right">
+      <a href="index.html" class="btn-cms">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="4" height="4" rx="1" fill="currentColor"/><rect x="7" y="1" width="4" height="4" rx="1" fill="currentColor"/><rect x="1" y="7" width="4" height="4" rx="1" fill="currentColor"/><rect x="7" y="7" width="4" height="4" rx="1" fill="currentColor"/></svg>
+        CMS beheer
+      </a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <h1>Ons <span>Aanbod</span></h1>
+      <p>Bekijk ons actuele aanbod van zorgvuldig geselecteerde performance- en luxe voertuigen. Alle auto's worden uitgebreid gekeurd aangeboden.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-val" id="stat-count">—</div>
+        <div class="stat-label">Voertuigen</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" id="stat-merken">—</div>
+        <div class="stat-label">Merken</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="filterbar">
+  <div class="filterbar-inner">
+    <div class="srch-wrap">
+      <span class="srch-icon">⌕</span>
+      <input class="srch" id="srch" placeholder="Zoek op merk, model, kenteken..." oninput="filter()">
+    </div>
+    <select class="filter-sel" id="f-brandstof" onchange="filter()">
+      <option value="">Brandstof</option>
+      <option>Benzine</option><option>Diesel</option><option>Elektrisch</option>
+      <option>Hybride (PHEV)</option><option>Hybride (mild)</option>
+    </select>
+    <select class="filter-sel" id="f-sort" onchange="filter()">
+      <option value="datum">Nieuwste eerst</option>
+      <option value="prijs-asc">Prijs ↑</option>
+      <option value="prijs-desc">Prijs ↓</option>
+      <option value="km-asc">KM ↑</option>
+      <option value="jaar-desc">Bouwjaar ↓</option>
+    </select>
+    <span class="result-count" id="result-count"></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="grid" id="grid">
+    <!-- Skeleton loaders -->
+    ${[1,2,3,4,5,6].map(()=>`
+    <div class="skel">
+      <div class="skel-img"></div>
+      <div class="skel-body">
+        <div class="skel-line w80"></div>
+        <div class="skel-line w60"></div>
+        <div class="skel-line w40"></div>
+      </div>
+    </div>`).join('')}
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">HS <span>PERFORMANCE</span></div>
+    <div class="footer-sub">Alle prijzen zijn inclusief BTW · Wijzigingen en drukfouten voorbehouden</div>
+  </div>
+</footer>
+
+<!-- DETAIL MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModal(null,true)">×</button>
+    <div class="mgal" id="mgal">
+      <div class="mgal-slides" id="mgal-slides"></div>
+      <button class="mgal-prev" id="mgal-prev" onclick="mSlide(-1)">&#8249;</button>
+      <button class="mgal-next" id="mgal-next" onclick="mSlide(1)">&#8250;</button>
+      <div class="mgal-count" id="mgal-count"></div>
+      <div class="mgal-dots" id="mgal-dots"></div>
+    </div>
+    <div class="mgal-thumbs" id="mgal-thumbs"></div>
+    <div class="modal-body">
+      <div class="modal-main" id="modal-main"></div>
+      <div class="modal-side" id="modal-side"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getFirestore,collection,getDocs}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+const app=initializeApp({
+  apiKey:"AIzaSyAGlVfTY1tWTGw_RegZ5iYy62j9n9fQt3s",
+  authDomain:"carcms-eeaf6.firebaseapp.com",
+  projectId:"carcms-eeaf6",
+  storageBucket:"carcms-eeaf6.firebasestorage.app",
+  messagingSenderId:"339829663286",
+  appId:"1:339829663286:web:608018340c6702a87b9a97"
+});
+const db=getFirestore(app);
+const col=collection(db,'advertenties');
+const snap=await getDocs(col);
+window._ads=snap.docs.map(d=>({id:d.id,...d.data()}));
+window._ads.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
+// Update hero stats
+document.getElementById('stat-count').textContent=window._ads.length;
+document.getElementById('stat-merken').textContent=new Set(window._ads.map(a=>(a.merk||'').toLowerCase()).filter(Boolean)).size;
+filter();
+</script>
+
+<script>
+const EM={'bmw':'🏎️','mercedes-benz':'🏎️','audi':'🚙','volkswagen':'🚗','volvo':'🚘','toyota':'🚕','ford':'🚐','opel':'🚗','renault':'🚙','peugeot':'🚗','seat':'🚗','skoda':'🚗','kia':'🚙','hyundai':'🚗'};
+
+function fmtK(k){
+  if(!k)return'';
+  k=k.replace(/-/g,'').toUpperCase();
+  if(k.length===6)return k.slice(0,2)+'-'+k.slice(2,4)+'-'+k.slice(4);
+  if(k.length===7)return k.slice(0,2)+'-'+k.slice(2,5)+'-'+k.slice(5);
+  return k;
+}
+
+function apkInfo(apk){
+  if(!apk)return null;
+  const d=(new Date(apk)-new Date())/864e5;
+  if(d<0)return{cls:'exp',txt:'APK verlopen'};
+  if(d<60)return{cls:'warn',txt:`APK verloopt over ${Math.round(d)} dagen`};
+  return{cls:'ok',txt:'APK geldig t/m '+new Date(apk).toLocaleDateString('nl-NL')};
+}
+
+function buildCardSlider(fotos,em,sid){
+  if(!fotos||!fotos.length){
+    return`<div class="slide nophoto">${em}</div>`;
+  }
+  const slides=fotos.map((u,i)=>`<div class="slide"><img src="${u}" alt="foto ${i+1}" loading="lazy"></div>`).join('');
+  const dots=fotos.length>1?`<div class="sl-dots">${fotos.map((_,i)=>`<div class="sdot ${i===0?'on':''}" onclick="cSlide('${sid}',${i},event)"></div>`).join('')}</div>`:'';
+  const nav=fotos.length>1?`<button class="sl-prev" onclick="cSlide('${sid}',-1,event,true)">&#8249;</button><button class="sl-next" onclick="cSlide('${sid}',1,event,true)">&#8250;</button>`:'';
+  return`<div class="slides" id="${sid}" data-idx="0">${slides}</div>${dots}${nav}`;
+}
+
+function cSlide(sid,val,e,rel=false){
+  if(e){e.stopPropagation();}
+  const el=document.getElementById(sid);if(!el)return;
+  const slides=el.querySelectorAll('.slide');
+  const n=slides.length;
+  let idx=rel?(parseInt(el.dataset.idx||0)+val+n)%n:val;
+  el.dataset.idx=idx;
+  el.style.transform=`translateX(-${idx*100}%)`;
+  el.closest('.card-img')?.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('on',i===idx));
+}
+window.cSlide=cSlide;
+
+function renderCard(ad){
+  const em=EM[(ad.merk||'').toLowerCase()]||'🚗';
+  const sid='cs'+ad.id.slice(-8);
+  const kf=fmtK(ad.kenteken);
+  const prijs=ad.prijs?'€ '+parseInt(ad.prijs).toLocaleString('nl-NL'):'Op aanvraag';
+  const km=ad.km?parseInt(ad.km).toLocaleString('nl-NL')+' km':'';
+  const meta=[ad.jaar,km,ad.brandstof,ad.transmissie,ad.pk?ad.pk+' pk':'',ad.kleur].filter(Boolean).join(' · ');
+  const fotos=ad.fotos||[];
+  const apk=apkInfo(ad.apk);
+  const tags=(ad.opties||[]).slice(0,5);
+  const meer=(ad.opties||[]).length>5?`<span class="tag more">+${(ad.opties||[]).length-5}</span>`:'';
+
+  return`<div class="card" onclick="openModal('${ad.id}')">
+    <div class="card-img">
+      ${buildCardSlider(fotos,em,sid)}
+      <div class="ov"></div>
+      ${kf?`<div class="card-plate"><div class="card-plate-flag"><div class="card-plate-stars">★★★<br>★ ★<br>★★★</div><div class="card-plate-nl">NL</div></div><div class="card-plate-nr">${kf}</div></div>`:''}
+      ${apk?`<div class="apk-pill ${apk.cls}">${apk.cls==='ok'?'APK ✓':apk.cls==='warn'?'APK bijna':'APK ✗'}</div>`:''}
+      ${fotos.length>1?`<div class="photo-count-badge">📷 ${fotos.length}</div>`:''}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${ad.merk} ${ad.model}</div>
+      <div class="card-meta">${meta}</div>
+      ${tags.length?`<div class="card-tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}${meer}</div>`:''}
+      <div class="card-price">${prijs}</div>
+      <button class="card-btn">Bekijk details</button>
+    </div>
+  </div>`;
+}
+
+function filter(){
+  if(!window._ads)return;
+  const q=(document.getElementById('srch').value||'').toLowerCase();
+  const bf=document.getElementById('f-brandstof').value;
+  const sort=document.getElementById('f-sort').value;
+  let list=[...window._ads];
+  if(q)list=list.filter(a=>(a.merk+a.model+a.kenteken+a.brandstof+a.kleur+a.beschrijving).toLowerCase().includes(q));
+  if(bf)list=list.filter(a=>a.brandstof===bf);
+  if(sort==='prijs-asc')list.sort((a,b)=>(a.prijs||0)-(b.prijs||0));
+  else if(sort==='prijs-desc')list.sort((a,b)=>(b.prijs||0)-(a.prijs||0));
+  else if(sort==='km-asc')list.sort((a,b)=>(parseInt(a.km)||0)-(parseInt(b.km)||0));
+  else if(sort==='jaar-desc')list.sort((a,b)=>(b.jaar||0)-(a.jaar||0));
+  else list.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
+
+  document.getElementById('result-count').textContent=list.length+' voertuig'+(list.length!==1?'en':'');
+  const g=document.getElementById('grid');
+  if(!list.length){
+    g.innerHTML=`<div class="empty"><div class="empty-icon">🚗</div><strong>${window._ads.length?'Geen resultaten':'Geen aanbod'}</strong><p>${window._ads.length?'Probeer een andere zoekopdracht.':'Er zijn momenteel geen voertuigen beschikbaar.'}</p></div>`;
+    return;
+  }
+  g.innerHTML=list.map(renderCard).join('');
+}
+window.filter=filter;
+
+/* ── MODAL ── */
+let mIdx=0,mFotos=[];
+
+function openModal(id){
+  const ad=window._ads?.find(a=>a.id===id);
+  if(!ad)return;
+  mFotos=ad.fotos||[];
+  mIdx=0;
+
+  // Gallery
+  const em=EM[(ad.merk||'').toLowerCase()]||'🚗';
+  const slides=document.getElementById('mgal-slides');
+  const thumbs=document.getElementById('mgal-thumbs');
+  const dots=document.getElementById('mgal-dots');
+  const prev=document.getElementById('mgal-prev');
+  const next=document.getElementById('mgal-next');
+
+  if(mFotos.length){
+    slides.innerHTML=mFotos.map((u,i)=>`<div class="mgal-slide"><img src="${u}" alt="foto ${i+1}"></div>`).join('');
+    thumbs.innerHTML=mFotos.map((u,i)=>`<div class="mgal-thumb ${i===0?'on':''}" onclick="mGoto(${i})"><img src="${u}" alt="${i+1}"></div>`).join('');
+    dots.innerHTML=mFotos.map((_,i)=>`<div class="mgal-dot ${i===0?'on':''}" onclick="mGoto(${i})"></div>`).join('');
+    thumbs.style.display='flex';
+    prev.style.display=next.style.display=mFotos.length>1?'flex':'none';
+  }else{
+    slides.innerHTML=`<div class="mgal-slide nophoto">${em}</div>`;
+    thumbs.style.display='none';
+    prev.style.display=next.style.display='none';
+    dots.innerHTML='';
+  }
+  mUpdateCount();
+
+  // Main content
+  const prijs=ad.prijs?'€ '+parseInt(ad.prijs).toLocaleString('nl-NL'):'Op aanvraag';
+  const km=ad.km?parseInt(ad.km).toLocaleString('nl-NL')+' km':'—';
+  const apk=apkInfo(ad.apk);
+  const kf=fmtK(ad.kenteken);
+  const specs=[
+    ['Bouwjaar',ad.jaar||'—'],['Brandstof',ad.brandstof||'—'],
+    ['Transmissie',ad.transmissie||'—'],['Vermogen',ad.pk?ad.pk+' PK':'—'],
+    ['Kilometerstand',km],['Kleur',ad.kleur||'—'],
+    ['Carrosserie',ad.carrosserie||'—'],['Deuren',ad.deuren||'—'],
+    ['Cilinderinhoud',ad.cc?ad.cc+' cc':'—'],['Kenteken',kf||'—'],
+  ].filter(s=>s[1]&&s[1]!=='—');
+
+  document.getElementById('modal-main').innerHTML=`
+    <div class="modal-title">${ad.merk} ${ad.model}</div>
+    ${kf?`<div class="modal-plate">${kf}</div>`:''}
+    ${ad.beschrijving?`<p class="modal-desc">${ad.beschrijving}</p>`:''}
+    <div class="specs-title">Specificaties</div>
+    <div class="specs-grid">
+      ${specs.map(s=>`<div class="spec-item"><div class="spec-label">${s[0]}</div><div class="spec-val">${s[1]}</div></div>`).join('')}
+    </div>
+    ${(ad.opties||[]).length?`
+    <div class="opts-title">Uitrusting &amp; opties</div>
+    <div class="opts-wrap">${(ad.opties||[]).map(o=>`<span class="opt-chip">${o}</span>`).join('')}</div>`:''}
+  `;
+
+  const dt=ad.datum?new Date(ad.datum).toLocaleDateString('nl-NL'):'';
+  document.getElementById('modal-side').innerHTML=`
+    <div>
+      <div class="modal-price">${prijs}</div>
+      <div class="modal-price-label">Vraagprijs incl. BTW</div>
+      ${apk?`<div class="modal-apk ${apk.cls}">${apk.txt}</div>`:''}
+    </div>
+    ${ad.km?`<div class="km-badge"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3.5l2 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>${km}</div>`:''}
+    <div class="divider"></div>
+    <div class="contact-block">
+      <div class="contact-label">Interesse? Neem contact op</div>
+      <a href="tel:+31" class="btn-contact">Bel ons</a>
+      <a href="https://wa.me/31" target="_blank" class="btn-wa">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 1.41.37 2.74 1.01 3.9L0 16l4.25-1.11A7.94 7.94 0 008 16c4.42 0 8-3.58 8-8s-3.58-8-8-8zm3.92 11.32c-.16.45-1 .88-1.36.93-.35.05-.8.07-1.3-.08-.3-.09-.68-.22-1.17-.43-2.05-.88-3.39-2.94-3.49-3.08-.1-.13-.8-1.06-.8-2.02s.51-1.43.69-1.63c.18-.2.39-.25.52-.25h.37c.12 0 .28-.04.44.34.16.38.55 1.34.6 1.44.05.1.08.21.02.34-.06.13-.1.21-.19.32l-.28.34c-.1.1-.2.2-.08.4.12.2.52.85 1.12 1.38.77.68 1.42.89 1.62.99.2.1.32.08.44-.05.12-.13.5-.59.64-.79.14-.2.27-.17.46-.1.18.07 1.16.55 1.36.65.2.1.33.15.38.23.05.08.05.45-.11.9z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+    <div class="divider"></div>
+    ${dt?`<div class="modal-date">Geplaatst: ${dt}</div>`:''}
+  `;
+
+  document.getElementById('modal-bg').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+window.openModal=openModal;
+
+function closeModal(e,force=false){
+  if(!force&&e&&e.target!==document.getElementById('modal-bg'))return;
+  document.getElementById('modal-bg').classList.remove('open');
+  document.body.style.overflow='';
+}
+window.closeModal=closeModal;
+
+function mSlide(dir){
+  mIdx=(mIdx+dir+mFotos.length)%mFotos.length;
+  mApply();
+}
+window.mSlide=mSlide;
+
+function mGoto(idx){mIdx=idx;mApply();}
+window.mGoto=mGoto;
+
+function mApply(){
+  document.getElementById('mgal-slides').style.transform=`translateX(-${mIdx*100}%)`;
+  document.querySelectorAll('.mgal-dot').forEach((d,i)=>d.classList.toggle('on',i===mIdx));
+  document.querySelectorAll('.mgal-thumb').forEach((t,i)=>t.classList.toggle('on',i===mIdx));
+  mUpdateCount();
+}
+
+function mUpdateCount(){
+  const c=document.getElementById('mgal-count');
+  if(mFotos.length>1)c.textContent=(mIdx+1)+' / '+mFotos.length;
+  else c.textContent='';
+}
+
+// Keyboard nav
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('modal-bg').classList.contains('open'))return;
+  if(e.key==='ArrowRight')mSlide(1);
+  else if(e.key==='ArrowLeft')mSlide(-1);
+  else if(e.key==='Escape')closeModal(null,true);
+});
+
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body>
+</html>
