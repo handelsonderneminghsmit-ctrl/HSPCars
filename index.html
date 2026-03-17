@@ -499,12 +499,15 @@ async function rdwOpzoeken(){
     }
 
     // ── APK ───────────────────────────────────────────────────────────────
-    // vervaldatum_apk = "YYYYMMDD" string
     if(apk.length){
-      const s=String(apk[0].vervaldatum_apk||'').replace(/-/g,'');
-      if(s.length>=8){
-        sf('f-apk',s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8));
-        checkApk();
+      const rawApk=apk[0].vervaldatum_apk||apk[0].vervaldatum_apk_dt||'';
+      console.log('APK raw:', rawApk, apk[0]);
+      if(rawApk){
+        const s=String(rawApk).replace(/\D/g,'').slice(0,8);
+        if(s.length===8){
+          document.getElementById('f-apk').value=s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
+          checkApk();
+        }
       }
     }
 
