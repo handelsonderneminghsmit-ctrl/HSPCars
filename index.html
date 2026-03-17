@@ -186,10 +186,10 @@ input[type=date]{color-scheme:dark}
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1h5v5H1zM7 1h5v5H7zM1 7h5v5H1zM7 7h5v5H7z" fill="currentColor" opacity=".7"/></svg>
         Toevoegen
       </button>
-      <button class="nb" onclick="showPage('ads',this)">
+      <a href="advertenties.html" class="nb" style="text-decoration:none">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1.5" width="11" height="2.5" rx="1" fill="currentColor" opacity=".5"/><rect x="1" y="5.5" width="11" height="2.5" rx="1" fill="currentColor" opacity=".7"/><rect x="1" y="9.5" width="11" height="2.5" rx="1" fill="currentColor"/></svg>
-        Advertenties <span class="ct" id="ad-count">0</span>
-      </button>
+        Advertenties <span class="ct" id="ad-count">—</span>
+      </a>
     </nav>
   </div>
 </header>
@@ -320,22 +320,6 @@ input[type=date]{color-scheme:dark}
   <button class="btn-sub" id="submit-btn" onclick="submitAuto()">Advertentie publiceren</button>
 </div>
 
-<!-- ═ ADS ═ -->
-<div class="page" id="page-ads">
-  <div class="pg-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-    <div>
-      <div class="pg-title">Actieve <span>Advertenties</span></div>
-      <div class="pg-sub" id="ads-sub">Alle voertuigen in het systeem</div>
-    </div>
-  </div>
-  <div class="tb">
-    <div class="sw">
-      <span class="si">⌕</span>
-      <input class="srch" id="srch" placeholder="Zoeken op merk, model, kenteken..." oninput="renderAds()">
-    </div>
-  </div>
-  <div class="ag" id="ads-grid"></div>
-</div>
 
 </div><!-- /main -->
 <div class="toast" id="toast"></div>
@@ -381,7 +365,7 @@ function showPage(name,el){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(el)el.classList.add('active');
-  if(name==='ads')renderAds();
+
 }window.showPage=showPage;
 
 async function rdwOpzoeken(){
@@ -758,7 +742,8 @@ async function submitAuto(){
     await addDoc(window._col,{...data,aangemaakt:serverTimestamp()});
     showToast('Advertentie gepubliceerd!','success');
     resetForm();await loadAds();
-    showPage('ads',document.querySelectorAll('.nb')[1]);
+    // Redirect to advertenties page after save
+    window.location.href='advertenties.html';
   }catch(e){showToast('Fout bij opslaan: '+e.message,'error');}
   finally{btn.disabled=false;btn.textContent='Advertentie publiceren';}
 }window.submitAuto=submitAuto;
@@ -787,9 +772,7 @@ async function loadAds(){
     const{getDocs}=window._fb;
     const snap=await getDocs(window._col);
     alleAds=snap.docs.map(d=>({id:d.id,...d.data()}));
-    alleAds.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
     document.getElementById('ad-count').textContent=alleAds.length;
-    renderAds();
   }catch(e){console.error('Firebase fout:',e);}
 }window.loadAds=loadAds;
 
@@ -818,29 +801,15 @@ function goSlide(sid,val,rel=false){
   el.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('active',i===idx));
 }window.goSlide=goSlide;
 
-function renderAds(){
-  const q=(document.getElementById('srch')?.value||'').toLowerCase();
-  const g=document.getElementById('ads-grid');
-  let list=alleAds;
-  if(q)list=alleAds.filter(a=>(a.merk+a.model+a.kenteken+a.brandstof+a.kleur).toLowerCase().includes(q));
-  document.getElementById('ads-sub').textContent=list.length+' voertuig'+(list.length!==1?'en':'')+' gevonden';
-  if(!list.length){g.innerHTML=`<div class="empty"><div class="empty-ic">🚗</div><strong>${alleAds.length?'Geen resultaten':'Nog geen advertenties'}</strong>${alleAds.length?'Probeer een andere zoekterm.':'Voeg een auto toe via het CMS.'}</div>`;return;}
-  g.innerHTML=list.map(ad=>{
-    const em=EM[(ad.merk||'').toLowerCase()]||'🚗';
-    const prijs=ad.prijs?'€ '+parseInt(ad.prijs).toLocaleString('nl-NL'):'';
-    const km=ad.km?parseInt(ad.km).toLocaleString('nl-NL')+' km':'';
-    const meta=[ad.jaar,km,ad.brandstof,ad.transmissie,ad.pk?ad.pk+' pk':'',ad.kleur].filter(Boolean).join(' · ');
-    const opts=(ad.opties||[]).slice(0,7),meer=(ad.opties||[]).length>7?`<span class="otg more">+${(ad.opties||[]).length-7}</span>`:'';
-    const dt=ad.datum?new Date(ad.datum).toLocaleDateString('nl-NL'):'';
-    const kf=ad.kenteken?fmtK(ad.kenteken):'';
-    const slider=buildSlider(ad.fotos,em,kf,ad.apk,ad.id);
-    return`<div class="ac">${slider}<div class="ab"><div class="an">${ad.merk} ${ad.model}</div><div class="am">${meta}</div>${prijs?`<div class="ap">${prijs}</div>`:''} ${ad.beschrijving?`<div class="adsc">${ad.beschrijving}</div>`:''} ${opts.length?`<div class="aot">${opts.map(o=>`<span class="otg">${o}</span>`).join('')}${meer}</div>`:''}<div class="afoot"><span class="adt">${dt}</span><button class="bdel" onclick="deleteAd('${ad.id}')">Verwijderen</button></div></div></div>`;
-  }).join('');
-}window.renderAds=renderAds;
-
 async function deleteAd(id){
   if(!confirm('Weet je zeker dat je deze advertentie wilt verwijderen?'))return;
-  try{const{deleteDoc,doc}=window._fb;await deleteDoc(doc(window._db,'advertenties',id));alleAds=alleAds.filter(a=>a.id!==id);document.getElementById('ad-count').textContent=alleAds.length;renderAds();showToast('Advertentie verwijderd','success');}catch(e){showToast('Fout bij verwijderen','error');}
+  try{
+    const{deleteDoc,doc}=window._fb;
+    await deleteDoc(doc(window._db,'advertenties',id));
+    alleAds=alleAds.filter(a=>a.id!==id);
+    document.getElementById('ad-count').textContent=alleAds.length;
+    showToast('Advertentie verwijderd','success');
+  }catch(e){showToast('Fout bij verwijderen','error');}
 }window.deleteAd=deleteAd;
 
 /* ── AI ADVERTENTIETEKST ── */
