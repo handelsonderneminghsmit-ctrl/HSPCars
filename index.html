@@ -413,6 +413,9 @@ async function rdwOpzoeken(){
 
     if(!basis.length){setMsg('Geen voertuig gevonden voor dit kenteken','err');return;}
     const v=basis[0];
+    // DEBUG: log alle velden van alle endpoints
+    console.log('BASIS alle velden:', JSON.stringify(v));
+    console.log('APK endpoint:', JSON.stringify(apk[0]||{}));
 
     // ── Basis velden ──────────────────────────────────────────────────────
     const merk=tc(v.merk||'');
