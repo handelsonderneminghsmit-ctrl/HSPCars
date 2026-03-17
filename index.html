@@ -386,14 +386,12 @@ async function rdwOpzoeken(){
     // sgfe-77wx = APK vervaldatum
     // 8ys7-d773 = brandstof per voertuig (brandstof_omschrijving, nettomaximumvermogen in kW)
     // 3huj-srit = as/rijden (aantal_assen, wielbasis — géén transmissie)
-    // iosu-7ptp = voertuig kleur (eerste_kleur, tweede_kleur)
-    // Kleur zit ook in basisdata m9d7-ebf2 als eerste_kleur
-    const[basis,apk,brand,as3,kleur]=await Promise.all([
+    // Kleur zit in basisdata m9d7-ebf2 als eerste_kleur
+    const[basis,apk,brand,as3]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
-      safe(`https://opendata.rdw.nl/resource/iosu-7ptp.json?kenteken=${raw}`),
     ]);
 
     if(!basis.length){setMsg('Geen voertuig gevonden voor dit kenteken','err');return;}
@@ -473,13 +471,11 @@ async function rdwOpzoeken(){
     if(trans) setSel('f-transmissie',trans);
 
     // ── Kleur ─────────────────────────────────────────────────────────────
-    // iosu-7ptp geeft eerste_kleur als "ZWART","WIT","ROOD" etc.
-    // Basisdata heeft ook eerste_kleur. Probeer beide.
+    // eerste_kleur zit direct in basisdata m9d7-ebf2
     {
-      let k='';
-      if(kleur.length) k=mapKleur(kleur[0].eerste_kleur||kleur[0].tweede_kleur||'');
-      if(!k) k=mapKleur(v.eerste_kleur||v.tweede_kleur||'');
+      let k=mapKleur(v.eerste_kleur||v.tweede_kleur||v.kleur||'');
       if(!k){
+        // Scan alle string-waarden van basisdata op bekende kleurnamen
         const allStr=Object.values(v).map(x=>String(x||'').toUpperCase()).join(' ');
         for(const kn of ['ZWART','WIT','GRIJS','BLAUW','ROOD','GROEN','GEEL','ORANJE','BRUIN','ZILVER','BEIGE','ANTRACIET']){
           if(allStr.includes(kn)){k=mapKleur(kn);if(k)break;}
@@ -630,16 +626,10 @@ Regels:
 - Geef alleen opties terug die in de lijst staan.`;
 
   try{
-    // Gebruik corsproxy.io als tussenpersoon (CORS fix voor GitHub Pages)
     const payload={model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]};
-    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent('https://api.anthropic.com/v1/messages');
-    const resp=await fetch(proxyUrl,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    if(!resp.ok) throw new Error('API '+resp.status);
-    const data=await resp.json();
+    const r=await fetch('https://carcms.handelsondernemingh-smit.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
+    if(!r.ok) throw new Error('Worker fout '+r.status);
+    const data=await r.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
     const clean=raw.replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(clean);
@@ -650,9 +640,9 @@ Regels:
     gekozen=new Set([...standaard]);
     renderOptsGrid(merkOpts,huidigeCat);
     document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
-    showToast(`${standaard.size} standaardopties ingevuld voor ${merk} ${model} (${jaar})`,'success');
+    showToast(standaard.size+' standaardopties ingevuld voor '+merk+' '+model+' ('+jaar+')','success');
   }catch(e){
-    console.warn('AI opties fout:',e);
+    console.warn('AI opties niet beschikbaar, gebruik lokale opties:',e.message);
     buildOpts(merk);
   }finally{
     setOptsLoading(false);
@@ -854,21 +844,10 @@ Schrijf 3-4 aantrekkelijke zinnen. Geen opsomming, geen koptekst, gewoon lopende
     status.innerHTML='<span class="ai-cursor"></span> AI schrijft advertentietekst...';
     textarea.value='';
 
-    // Gebruik corsproxy.io als tussenpersoon (CORS fix voor GitHub Pages)
-    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent('https://api.anthropic.com/v1/messages');
-    const resp=await fetch(proxyUrl,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-
-    if(!resp.ok) throw new Error('API fout '+resp.status);
-    const data=await resp.json();
-    const tekst=data.content?.find(b=>b.type==='text')?.text||'';
+    const resp=await fetch('https://carcms.handelsondernemingh-smit.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(15000)});
+    if(!resp.ok) throw new Error('Worker fout '+resp.status);
+    const rd=await resp.json();
+    const tekst=rd.content?.find(b=>b.type==='text')?.text||'';
     if(!tekst) throw new Error('Lege respons');
 
     status.textContent='';
