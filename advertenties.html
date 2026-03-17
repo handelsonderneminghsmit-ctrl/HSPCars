@@ -2,10 +2,10 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='8' fill='%23cc1818'/><text y='72' x='50' text-anchor='middle' font-size='55' font-family='Arial Black' font-weight='900' fill='white'>HS</text></svg>">
+<link rel="icon" href="logo.png" type="image/png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HS Performance — Aanbod</title>
-<meta name="description" content="Bekijk ons actuele aanbod van performance en luxe voertuigen bij HS Performance.">
+<meta name="description" content="Bekijk ons actuele voertuigenaanbod bij HS Performance.">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -23,11 +23,11 @@ body{font-family:'Barlow',sans-serif;background:var(--black);color:var(--text);m
 header{background:var(--dark);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:200}
 .hdr{max-width:1400px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;gap:1rem}
 .logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-.logo-mark{width:38px;height:38px;background:var(--red);clip-path:polygon(10% 0%,100% 0%,90% 100%,0% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-mark span{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:#fff;letter-spacing:.02em}
-.logo-text{display:flex;flex-direction:column;gap:1px}
-.logo-name{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;letter-spacing:.06em;color:var(--text);line-height:1}
-.logo-sub{font-size:9px;font-weight:500;letter-spacing:.18em;color:var(--red);text-transform:uppercase}
+.logo-mark{display:none}
+
+.logo-text{display:none}
+
+
 .hdr-right{display:flex;align-items:center;gap:1rem}
 .hdr-tel{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px}
 .hdr-tel svg{flex-shrink:0;color:var(--red)}
@@ -218,12 +218,9 @@ footer{border-top:1px solid var(--border);margin-top:4rem;padding:2rem;text-alig
 
 <header>
   <div class="hdr">
-    <a href="#" class="logo">
-      <div class="logo-mark"><span>HS</span></div>
-      <div class="logo-text">
-        <div class="logo-name">HS PERFORMANCE</div>
-        <div class="logo-sub">Officieel aanbod</div>
-      </div>
+    <a href="#" class="logo" style="gap:10px">
+      <img src="logo.png" alt="HS Performance" style="height:38px;object-fit:contain;display:block">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;color:var(--red);text-transform:uppercase;align-self:flex-end;padding-bottom:2px">Occasions</span>
     </a>
     <div class="hdr-right">
       <a href="index.html" class="btn-cms">
