@@ -497,12 +497,28 @@ function openModal(id){
   const apk=apkInfo(ad.apk);
   const kf=fmtK(ad.kenteken);
   const specs=[
-    ['Bouwjaar',ad.jaar||'—'],['Brandstof',ad.brandstof||'—'],
-    ['Transmissie',ad.transmissie||'—'],['Vermogen',ad.pk?ad.pk+' PK':'—'],
-    ['Kilometerstand',km],['Kleur',ad.kleur||'—'],
-    ['Carrosserie',ad.carrosserie||'—'],['Deuren',ad.deuren||'—'],
-    ['Cilinderinhoud',ad.cc?ad.cc+' cc':'—'],['Kenteken',kf||'—'],
-  ].filter(s=>s[1]&&s[1]!=='—');
+    ['Bouwjaar',ad.jaar||''],
+    ['Brandstof',ad.brandstof||''],
+    ['Transmissie',ad.transmissie||''],
+    ['Vermogen',ad.pk?ad.pk+' PK':''],
+    ['Kilometerstand',km],
+    ['Kleur',ad.kleur||''],
+    ['Carrosserie',ad.carrosserie||''],
+    ['Deuren',ad.deuren||''],
+    ['Zitplaatsen',ad.zitplaatsen?ad.zitplaatsen+' personen':''],
+    ['Cilinders',ad.cilinders?ad.cilinders+'':''],
+    ['Cilinderinhoud',ad.cc?ad.cc+' cc':''],
+    ['Wielbasis',ad.wielbasis?ad.wielbasis+' cm':''],
+    ['Leeggewicht',ad.leeggewicht?ad.leeggewicht+' kg':''],
+    ['Rijklaargewicht',ad.rijklaar?ad.rijklaar+' kg':''],
+    ['Max. massa voertuig',ad.maxmassa?ad.maxmassa+' kg':''],
+    ['Max. massa samenstelling',ad.maxsamenstelling?ad.maxsamenstelling+' kg':''],
+    ['Trekgewicht geremd',ad.trekgeremd?ad.trekgeremd+' kg':''],
+    ['Trekgewicht ongeremd',ad.trekongeremd?ad.trekongeremd+' kg':''],
+    ['Voertuigcategorie',ad.eucat||''],
+    ['Zuinigheidsklasse',ad.zuinigheid||''],
+    ['Kenteken',kf||''],
+  ].filter(s=>s[1]);
 
   document.getElementById('modal-main').innerHTML=`
     <div class="modal-title">${ad.merk} ${ad.model}</div>
