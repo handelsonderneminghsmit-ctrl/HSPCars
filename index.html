@@ -397,13 +397,16 @@ async function rdwOpzoeken(){
   try{
     // ── 5 RDW endpoints parallel ──────────────────────────────────────────
     // m9d7-ebf2 = voertuig basis (merk, model, inrichting, deuren, cc, datum)
-    // a8qx-flvx = APK keuringshistorie (vervaldatum_keuring)
+    // sgfe-77wx = APK vervaldatum
     // 8ys7-d773 = brandstof per voertuig (brandstof_omschrijving, nettomaximumvermogen in kW)
     // 3huj-srit = as/rijden (aantal_assen, wielbasis — géén transmissie)
     // Kleur zit in basisdata m9d7-ebf2 als eerste_kleur
     const[basis,apk,brand,as3]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
-      safe(`https://opendata.rdw.nl/resource/a8qx-flvx.json?kenteken=${raw}&$order=meld_datum_door_keuringsinstantie_dt+DESC&$limit=1`),
+      Promise.all([
+      safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
+      safe(`https://opendata.rdw.nl/resource/a34c-vvps.json?kenteken=${raw}&$limit=1`),
+    ]).then(([a,b])=>a.length?a:b),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
     ]);
@@ -503,7 +506,13 @@ async function rdwOpzoeken(){
 
     // ── APK ───────────────────────────────────────────────────────────────
     if(apk.length){
-      const rawApk=apk[0].vervaldatum_keuring||apk[0].vervaldatum_keuring_dt||'';
+      // Probeer alle bekende RDW APK veldnamen
+      const rawApk=apk[0].vervaldatum_apk
+        ||apk[0].vervaldatum_keuring
+        ||apk[0].vervaldatum_apk_dt
+        ||apk[0].vervaldatum_keuring_dt
+        ||'';
+      console.log('APK endpoint response:', apk[0]);
 
       if(rawApk){
         const s=String(rawApk).replace(/\D/g,'').slice(0,8);
