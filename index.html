@@ -163,6 +163,8 @@ input[type=date]{color-scheme:dark}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid #ff5c5c}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.ai-cursor{display:inline-block;width:2px;height:14px;background:var(--red);animation:blink .7s infinite;vertical-align:middle;margin-left:2px}
 .spin{width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--red);border-radius:50%;animation:spin .65s linear infinite;display:inline-block;vertical-align:middle}
 @media(max-width:700px){.hdr{padding:0 1rem}.main{padding:1rem}.g2,.g3,.g4{grid-template-columns:1fr}.s2{grid-column:span 1}.rdw-row{flex-direction:column;align-items:stretch}.kp-input{width:100%}}
 </style>
@@ -264,8 +266,15 @@ input[type=date]{color-scheme:dark}
           <input type="number" id="f-prijs" placeholder="89500" min="0" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700">
         </div>
         <div class="fld s2">
-          <label>Beschrijving</label>
-          <textarea id="f-beschrijving" placeholder="Beschrijf de staat, onderhoudshistorie, bijzonderheden..."></textarea>
+          <label style="display:flex;align-items:center;justify-content:space-between">
+            <span>Beschrijving</span>
+            <button type="button" id="ai-btn" onclick="generateAITekst()" style="background:var(--red-dim);border:1px solid var(--red);color:var(--red);font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:2px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1L6.5 4H10L7.5 6L8.5 9L5.5 7L2.5 9L3.5 6L1 4H4.5L5.5 1Z" fill="currentColor"/></svg>
+              AI tekst genereren
+            </button>
+          </label>
+          <div id="ai-status" style="font-size:11px;color:var(--text3);margin-bottom:4px;min-height:16px"></div>
+          <textarea id="f-beschrijving" rows="5" placeholder="Schrijf zelf een beschrijving, of gebruik de AI-knop hierboven om automatisch een professionele advertentietekst te genereren..."></textarea>
         </div>
       </div>
     </div>
@@ -285,7 +294,7 @@ input[type=date]{color-scheme:dark}
   <div class="sec">
     <div class="sec-head">
       <div class="sec-title">Foto's</div>
-      <span class="photo-count" id="photo-count">0 / 10 foto's</span>
+      <span class="photo-count" id="photo-count">0 foto's</span>
     </div>
     <div class="sec-body">
       <div class="upload-zone" id="upload-zone"
@@ -296,9 +305,9 @@ input[type=date]{color-scheme:dark}
         <div class="upload-icon">📷</div>
         <div class="upload-txt">
           <strong>Klik of sleep foto's hierheen</strong>
-          Meerdere foto's tegelijk mogelijk &middot; Max 10 foto's
+          Meerdere foto's tegelijk mogelijk &middot; Onbeperkt
         </div>
-        <div class="upload-hint">JPG, PNG, WEBP &middot; Eerste foto wordt hoofdfoto</div>
+        <div class="upload-hint">JPG, PNG, WEBP &middot; Eerste foto wordt hoofdfoto &middot; Volgorde aanpasbaar</div>
       </div>
       <div class="upload-progress" id="upload-progress">
         <div class="upload-progress-bar" id="upload-bar"></div>
@@ -480,7 +489,7 @@ function resetForm(){
   // Reset photos
   pendingFiles=[];uploadedUrls=[];
   document.getElementById('photo-grid').innerHTML='';
-  document.getElementById('photo-count').textContent='0 / 10 foto\'s';
+  document.getElementById('photo-count').textContent='0 foto\'s';
   document.getElementById('foto-input').value='';
 }
 
@@ -546,6 +555,141 @@ async function deleteAd(id){
   try{const{deleteDoc,doc}=window._fb;await deleteDoc(doc(window._db,'advertenties',id));alleAds=alleAds.filter(a=>a.id!==id);document.getElementById('ad-count').textContent=alleAds.length;renderAds();showToast('Advertentie verwijderd','success');}catch(e){showToast('Fout bij verwijderen','error');}
 }window.deleteAd=deleteAd;
 
+/* ── AI ADVERTENTIETEKST ── */
+async function generateAITekst(){
+  const merk=document.getElementById('f-merk').value.trim();
+  const model=document.getElementById('f-model').value.trim();
+  if(!merk||!model){showToast('Vul eerst merk en model in','error');return;}
+
+  const btn=document.getElementById('ai-btn');
+  const status=document.getElementById('ai-status');
+  const textarea=document.getElementById('f-beschrijving');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin"></span> Genereren...';
+
+  const jaar=document.getElementById('f-jaar').value;
+  const brandstof=document.getElementById('f-brandstof').value;
+  const transmissie=document.getElementById('f-transmissie').value;
+  const kleur=document.getElementById('f-kleur').value;
+  const pk=document.getElementById('f-pk').value;
+  const km=document.getElementById('f-km').value;
+  const cc=document.getElementById('f-cc').value;
+  const carrosserie=document.getElementById('f-carrosserie').value;
+  const apk=document.getElementById('f-apk').value;
+  const prijs=document.getElementById('f-prijs').value;
+  const opties=[...gekozen].slice(0,20);
+
+  const apkStr=apk?`APK geldig tot ${new Date(apk).toLocaleDateString('nl-NL')}`:'';
+  const optiesStr=opties.length?`Uitrusting: ${opties.join(', ')}.`:'';
+  const kmStr=km?`${parseInt(km).toLocaleString('nl-NL')} km`:'';
+  const prijsStr=prijs?`Vraagprijs: €${parseInt(prijs).toLocaleString('nl-NL')}`:'';
+
+  const prompt=`Je bent een ervaren autoverkoper bij HS Performance, een gespecialiseerd autobedrijf in performance- en luxe voertuigen. Schrijf een professionele, enthousiaste advertentietekst in het Nederlands voor de volgende auto:
+
+Merk/Model: ${merk} ${model}
+${jaar?`Bouwjaar: ${jaar}`:''}
+${carrosserie?`Carrosserie: ${carrosserie}`:''}
+${kleur?`Kleur: ${kleur}`:''}
+${brandstof?`Brandstof: ${brandstof}`:''}
+${transmissie?`Transmissie: ${transmissie}`:''}
+${pk?`Vermogen: ${pk} pk`:''}
+${cc?`Cilinderinhoud: ${cc} cc`:''}
+${kmStr?`Kilometerstand: ${kmStr}`:''}
+${apkStr}
+${optiesStr}
+${prijsStr}
+
+Schrijf 3-4 aantrekkelijke zinnen. Geen opsomming, geen koptekst, gewoon lopende tekst. Benadruk de sterke punten van de auto en wek enthousiasme bij de koper. Sluit af met een uitnodiging om contact op te nemen of een proefrit te plannen. Maximaal 120 woorden.`;
+
+  try{
+    status.innerHTML='<span class="ai-cursor"></span> AI schrijft advertentietekst...';
+    textarea.value='';
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        stream:true,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    if(!resp.ok){
+      // Fallback: non-streaming
+      const errData=await resp.json().catch(()=>({}));
+      throw new Error(errData.error?.message||'API fout '+resp.status);
+    }
+
+    const reader=resp.body.getReader();
+    const decoder=new TextDecoder();
+    let buffer='';
+    textarea.value='';
+    status.textContent='';
+
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split('\n');
+      buffer=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const data=line.slice(6).trim();
+        if(data==='[DONE]')continue;
+        try{
+          const json=JSON.parse(data);
+          if(json.type==='content_block_delta'&&json.delta?.type==='text_delta'){
+            textarea.value+=json.delta.text;
+          }
+        }catch(e){}
+      }
+    }
+    status.textContent='✓ Tekst gegenereerd — bewerk naar wens';
+    status.style.color='var(--green)';
+    setTimeout(()=>{status.textContent='';status.style.color='';},4000);
+  }catch(e){
+    console.error('AI fout:',e);
+    // Fallback: generate locally
+    status.textContent='';
+    const fallback=buildFallbackTekst({merk,model,jaar,kleur,brandstof,transmissie,pk,km:kmStr,opties,apkStr});
+    typewriterEffect(textarea,fallback,()=>{
+      status.textContent='✓ Tekst gegenereerd';
+      status.style.color='var(--green)';
+      setTimeout(()=>{status.textContent='';status.style.color='';},3000);
+    });
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d=\"M5.5 1L6.5 4H10L7.5 6L8.5 9L5.5 7L2.5 9L3.5 6L1 4H4.5L5.5 1Z\" fill=\"currentColor\"/></svg> AI tekst genereren';
+  }
+}
+window.generateAITekst=generateAITekst;
+
+function buildFallbackTekst(d){
+  const hoogtepunten=d.opties.slice(0,5).join(', ');
+  const kmTxt=d.km?`met slechts ${d.km}`:'';
+  const pkTxt=d.pk?`${d.pk} pk sterke `:'';
+  const kleurTxt=d.kleur?`in de prachtige kleur ${d.kleur.toLowerCase()}`:'';
+  const transText=d.transmissie?d.transmissie.toLowerCase():'';
+  let tekst=`Prachtige ${d.jaar||''} ${d.merk} ${d.model} ${kleurTxt}`;
+  if(d.brandstof||transText) tekst+=`, voorzien van ${[d.brandstof,transText].filter(Boolean).join(' en ')} aandrijving`;
+  if(d.km) tekst+=` en ${kmTxt} op de teller`;
+  tekst+='. ';
+  if(d.pk) tekst+=`Met ${pkTxt}vermogen levert deze ${d.merk} een rijervaring die u niet snel vergeet. `;
+  if(hoogtepunten) tekst+=`De auto is uitgerust met onder andere ${hoogtepunten}. `;
+  if(d.apkStr) tekst+=`${d.apkStr}. `;
+  tekst+=`Kom langs bij HS Performance voor een uitgebreide inspectie of proefrit — wij staan voor u klaar!`;
+  return tekst.replace(/  +/g,' ').trim();
+}
+
+function typewriterEffect(el,text,cb,i=0){
+  if(i<text.length){
+    el.value+=text[i];
+    setTimeout(()=>typewriterEffect(el,text,cb,i+1),12);
+  }else if(cb){cb();}
+}
+
 function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),3000);}window.showToast=showToast;
 
 /* ── CLOUDINARY FOTO UPLOAD ── */
@@ -562,9 +706,7 @@ function handleDrop(e){
 
 function handleFiles(files){
   const arr=[...files].filter(f=>f.type.startsWith('image/'));
-  const remaining=10-pendingFiles.length-uploadedUrls.length;
-  if(remaining<=0){showToast('Maximum van 10 foto\'s bereikt','error');return;}
-  const toAdd=arr.slice(0,remaining);
+  const toAdd=arr;
   toAdd.forEach(file=>{
     pendingFiles.push(file);
     const reader=new FileReader();
@@ -637,7 +779,7 @@ function setMainPhoto(btn){
 
 function updatePhotoCount(){
   const total=pendingFiles.length+uploadedUrls.length;
-  document.getElementById('photo-count').textContent=total+' / 10 foto\'s';
+  document.getElementById('photo-count').textContent=total+' foto\'s';
 }
 
 async function uploadPendingPhotos(){
