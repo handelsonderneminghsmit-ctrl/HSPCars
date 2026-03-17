@@ -404,9 +404,9 @@ async function rdwOpzoeken(){
     const[basis,apk,brand,as3]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
       Promise.all([
-      safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
-      safe(`https://opendata.rdw.nl/resource/a34c-vvps.json?kenteken=${raw}&$limit=1`),
-    ]).then(([a,b])=>a.length?a:b),
+        safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
+        safe(`https://opendata.rdw.nl/resource/2za2-nh4p.json?kenteken=${raw}&$order=datum_inschrijving+DESC&$limit=1`),
+      ]).then(([a,b])=>a.length?a:b.length?b:[]),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
     ]);
@@ -505,17 +505,13 @@ async function rdwOpzoeken(){
     }
 
     // ── APK ───────────────────────────────────────────────────────────────
-    if(apk.length){
-      // Probeer alle bekende RDW APK veldnamen
-      const rawApk=apk[0].vervaldatum_apk
-        ||apk[0].vervaldatum_keuring
-        ||apk[0].vervaldatum_apk_dt
-        ||apk[0].vervaldatum_keuring_dt
-        ||'';
-      console.log('APK endpoint response:', apk[0]);
-
-      if(rawApk){
-        const s=String(rawApk).replace(/\D/g,'').slice(0,8);
+    // Probeer APK uit sgfe-77wx endpoint, daarna uit basisdata
+    {
+      const apkRaw=apk.length
+        ? (apk[0].vervaldatum_apk||apk[0].vervaldatum_keuring||apk[0].vervaldatum_apk_dt||'')
+        : (v.vervaldatum_apk||v.apk_vervaldatum||'');
+      if(apkRaw){
+        const s=String(apkRaw).replace(/[^0-9]/g,'').slice(0,8);
         if(s.length===8){
           document.getElementById('f-apk').value=s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
           checkApk();
