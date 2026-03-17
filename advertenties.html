@@ -276,16 +276,12 @@ footer{border-top:1px solid var(--border);margin-top:4rem;padding:2rem;text-alig
 
 <div class="main">
   <div class="grid" id="grid">
-    <!-- Skeleton loaders -->
-    ${[1,2,3,4,5,6].map(()=>`
-    <div class="skel">
-      <div class="skel-img"></div>
-      <div class="skel-body">
-        <div class="skel-line w80"></div>
-        <div class="skel-line w60"></div>
-        <div class="skel-line w40"></div>
-      </div>
-    </div>`).join('')}
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
+    <div class="skel"><div class="skel-img"></div><div class="skel-body"><div class="skel-line w80"></div><div class="skel-line w60"></div><div class="skel-line w40"></div></div></div>
   </div>
 </div>
 
@@ -320,22 +316,25 @@ footer{border-top:1px solid var(--border);margin-top:4rem;padding:2rem;text-alig
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import{getFirestore,collection,getDocs}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-const app=initializeApp({
-  apiKey:"AIzaSyAGlVfTY1tWTGw_RegZ5iYy62j9n9fQt3s",
-  authDomain:"carcms-eeaf6.firebaseapp.com",
-  projectId:"carcms-eeaf6",
-  storageBucket:"carcms-eeaf6.firebasestorage.app",
-  messagingSenderId:"339829663286",
-  appId:"1:339829663286:web:608018340c6702a87b9a97"
-});
-const db=getFirestore(app);
-const col=collection(db,'advertenties');
-const snap=await getDocs(col);
-window._ads=snap.docs.map(d=>({id:d.id,...d.data()}));
-window._ads.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
-// Update hero stats
-document.getElementById('stat-count').textContent=window._ads.length;
-document.getElementById('stat-merken').textContent=new Set(window._ads.map(a=>(a.merk||'').toLowerCase()).filter(Boolean)).size;
+try{
+  const app=initializeApp({
+    apiKey:"AIzaSyAGlVfTY1tWTGw_RegZ5iYy62j9n9fQt3s",
+    authDomain:"carcms-eeaf6.firebaseapp.com",
+    projectId:"carcms-eeaf6",
+    storageBucket:"carcms-eeaf6.firebasestorage.app",
+    messagingSenderId:"339829663286",
+    appId:"1:339829663286:web:608018340c6702a87b9a97"
+  });
+  const db=getFirestore(app);
+  const snap=await getDocs(collection(db,'advertenties'));
+  window._ads=snap.docs.map(d=>({id:d.id,...d.data()}));
+  window._ads.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
+  document.getElementById('stat-count').textContent=window._ads.length;
+  document.getElementById('stat-merken').textContent=new Set(window._ads.map(a=>(a.merk||'').toLowerCase()).filter(Boolean)).size;
+}catch(e){
+  console.error('Firebase fout:',e);
+  window._ads=[];
+}
 filter();
 </script>
 
@@ -411,23 +410,23 @@ function renderCard(ad){
 }
 
 function filter(){
-  if(!window._ads)return;
+  const g=document.getElementById('grid');
+  if(window._ads===undefined)return;
   const q=(document.getElementById('srch').value||'').toLowerCase();
   const bf=document.getElementById('f-brandstof').value;
   const sort=document.getElementById('f-sort').value;
   let list=[...window._ads];
-  if(q)list=list.filter(a=>(a.merk+a.model+a.kenteken+a.brandstof+a.kleur+a.beschrijving).toLowerCase().includes(q));
+  if(q)list=list.filter(a=>((a.merk||'')+(a.model||'')+(a.kenteken||'')+(a.brandstof||'')+(a.kleur||'')+(a.beschrijving||'')).toLowerCase().includes(q));
   if(bf)list=list.filter(a=>a.brandstof===bf);
   if(sort==='prijs-asc')list.sort((a,b)=>(a.prijs||0)-(b.prijs||0));
   else if(sort==='prijs-desc')list.sort((a,b)=>(b.prijs||0)-(a.prijs||0));
   else if(sort==='km-asc')list.sort((a,b)=>(parseInt(a.km)||0)-(parseInt(b.km)||0));
-  else if(sort==='jaar-desc')list.sort((a,b)=>(b.jaar||0)-(a.jaar||0));
+  else if(sort==='jaar-desc')list.sort((a,b)=>(parseInt(b.jaar)||0)-(parseInt(a.jaar)||0));
   else list.sort((a,b)=>(b.datum||'')>(a.datum||'')?1:-1);
-
   document.getElementById('result-count').textContent=list.length+' voertuig'+(list.length!==1?'en':'');
-  const g=document.getElementById('grid');
   if(!list.length){
-    g.innerHTML=`<div class="empty"><div class="empty-icon">🚗</div><strong>${window._ads.length?'Geen resultaten':'Geen aanbod'}</strong><p>${window._ads.length?'Probeer een andere zoekopdracht.':'Er zijn momenteel geen voertuigen beschikbaar.'}</p></div>`;
+    const isFiltered=q||bf;
+    g.innerHTML='<div class="empty"><div class="empty-icon">\u{1F697}</div><strong>'+(isFiltered?'Geen resultaten':'Geen voertuigen beschikbaar')+'</strong><p>'+(isFiltered?'Geen voertuigen gevonden voor deze zoekopdracht.':'Er staan momenteel geen voertuigen in het aanbod. Kom later terug.')+'</p></div>';
     return;
   }
   g.innerHTML=list.map(renderCard).join('');
