@@ -651,7 +651,7 @@ function renderOptsGrid(cats,cat){
   let items=cat==='Alle'?Object.values(cats).flat():cats[cat]||[];
   g.innerHTML=items.map(o=>{
     const isOn=gekozen.has(o);
-    return`<div class="oi ${isOn?'on':''}" onclick="toggleOpt('${o.replace(/'/g,"\\'")},this)"><div class="ocb"><div class="tick"></div></div><span>${o}</span></div>`;
+    el.dataset.opt=o;return`<div class="oi ${isOn?'on':''}" data-opt="${o.replace(/"/g,'&quot;')}" onclick="toggleOpt(this.dataset.opt,this)"><div class="ocb"><div class="tick"></div></div><span>${o}</span></div>`;
   }).join('');
   document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
 }
@@ -813,11 +813,18 @@ Schrijf 3-4 aantrekkelijke zinnen. Geen opsomming, geen koptekst, gewoon lopende
   }catch(e){
     console.error('AI fout:',e);
     status.textContent='';
+    // Bij 429 (rate limit) toon vriendelijke melding ipv fout
+    if(e.message&&e.message.includes('429')){
+      status.textContent='Rate limit bereikt — lokale tekst gegenereerd';
+      status.style.color='var(--orange)';
+    }
     const fallback=buildFallbackTekst({merk,model,jaar,kleur,brandstof,transmissie,pk,km:kmStr,opties,apkStr});
     typewriterEffect(textarea,fallback,()=>{
-      status.textContent='✓ Tekst gegenereerd (lokaal)';
-      status.style.color='var(--green)';
-      setTimeout(()=>{status.textContent='';status.style.color='';},3000);
+      if(!status.textContent.includes('Rate limit')){
+        status.textContent='✓ Tekst gegenereerd';
+        status.style.color='var(--green)';
+      }
+      setTimeout(()=>{status.textContent='';status.style.color='';},4000);
     });
   }finally{
     btn.disabled=false;
