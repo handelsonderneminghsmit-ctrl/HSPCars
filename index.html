@@ -397,13 +397,13 @@ async function rdwOpzoeken(){
   try{
     // ── 5 RDW endpoints parallel ──────────────────────────────────────────
     // m9d7-ebf2 = voertuig basis (merk, model, inrichting, deuren, cc, datum)
-    // sgfe-77wx = APK vervaldatum
+    // a8qx-flvx = APK keuringshistorie (vervaldatum_keuring)
     // 8ys7-d773 = brandstof per voertuig (brandstof_omschrijving, nettomaximumvermogen in kW)
     // 3huj-srit = as/rijden (aantal_assen, wielbasis — géén transmissie)
     // Kleur zit in basisdata m9d7-ebf2 als eerste_kleur
     const[basis,apk,brand,as3]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
-      safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
+      safe(`https://opendata.rdw.nl/resource/a8qx-flvx.json?kenteken=${raw}&$order=meld_datum_door_keuringsinstantie_dt+DESC&$limit=1`),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
     ]);
@@ -415,8 +415,11 @@ async function rdwOpzoeken(){
     const merk=tc(v.merk||'');
     const model=tc(v.handelsbenaming||v.type_en_variant||v.voertuigsoort||'');
     // datum_eerste_toelating = YYYYMMDD formaat (bv. "20190315")
-    const jaar=v.datum_eerste_toelating?String(v.datum_eerste_toelating).slice(0,4)
-              :v.datum_tenaamstelling?String(v.datum_tenaamstelling).slice(0,4):'';
+    // RDW geeft dit soms als getal 20190315, soms als string "20190315", soms als ISO "2019-03-15T00:00:00.000"
+    const _datRaw=v.datum_eerste_toelating||v.datum_tenaamstelling||'';
+    const _datStr=String(_datRaw).replace(/\D/g,'').slice(0,8);
+    const jaar=_datStr.length>=4?_datStr.slice(0,4):'';
+    console.log('Jaar raw:', _datRaw, '→', jaar);
 
     sf('f-kenteken',raw);
     sf('f-merk',merk);
@@ -500,8 +503,8 @@ async function rdwOpzoeken(){
 
     // ── APK ───────────────────────────────────────────────────────────────
     if(apk.length){
-      const rawApk=apk[0].vervaldatum_apk||apk[0].vervaldatum_apk_dt||'';
-      console.log('APK raw:', rawApk, apk[0]);
+      const rawApk=apk[0].vervaldatum_keuring||apk[0].vervaldatum_keuring_dt||'';
+
       if(rawApk){
         const s=String(rawApk).replace(/\D/g,'').slice(0,8);
         if(s.length===8){
