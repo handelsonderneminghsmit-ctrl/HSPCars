@@ -263,6 +263,27 @@ input[type=date]{color-scheme:dark}
         <div class="fld"><label>Vermogen (PK)</label><input type="number" id="f-pk" placeholder="510"></div>
         <div class="fld"><label>Cilinderinhoud (cc)</label><input type="number" id="f-cc" placeholder="2993"></div>
         <div class="fld"><label>Kilometerstand</label><input type="number" id="f-km" placeholder="24000"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-head"><div class="sec-title">Gewichten &amp; Capaciteit</div></div>
+    <div class="sec-body">
+      <div class="g3">
+        <div class="fld"><label>Aantal zitplaatsen</label><input type="number" id="f-zitplaatsen" placeholder="5"></div>
+        <div class="fld"><label>Leeggewicht (kg)</label><input type="number" id="f-leeggewicht" placeholder="1562"></div>
+        <div class="fld"><label>Rijklaargewicht (kg)</label><input type="number" id="f-rijklaar" placeholder="1662"></div>
+        <div class="fld"><label>Maximum massa voertuig (kg)</label><input type="number" id="f-maxmassa" placeholder="2210"></div>
+        <div class="fld"><label>Maximum massa samenstelling (kg)</label><input type="number" id="f-maxsamenstelling" placeholder="4410"></div>
+        <div class="fld"><label>Trekgewicht geremd (kg)</label><input type="number" id="f-trekgeremd" placeholder="2200"></div>
+        <div class="fld"><label>Trekgewicht ongeremd (kg)</label><input type="number" id="f-trekongeremd" placeholder="750"></div>
+        <div class="fld"><label>Wielbasis (cm)</label><input type="number" id="f-wielbasis" placeholder="261"></div>
+        <div class="fld"><label>Aantal wielen</label><input type="number" id="f-wielen" placeholder="4"></div>
+        <div class="fld"><label>Aantal cilinders</label><input type="number" id="f-cilinders" placeholder="4"></div>
+        <div class="fld"><label>Europese voertuigcategorie</label><input type="text" id="f-eucat" placeholder="M1"></div>
+        <div class="fld"><label>Zuinigheidsclassificatie</label><input type="text" id="f-zuinigheid" placeholder="E"></div>
       </div>
     </div>
   </div>
@@ -424,8 +445,19 @@ async function rdwOpzoeken(){
     sf('f-jaar',jaar);
     // cilinderinhoud = cubic cm als getal of string
     if(v.cilinderinhoud)sf('f-cc',''+Math.round(parseFloat(v.cilinderinhoud)));
-    // aantal_deuren is een string "4" of getal
     if(v.aantal_deuren)setSel('f-deuren',''+v.aantal_deuren);
+    if(v.aantal_zitplaatsen)sf('f-zitplaatsen',''+v.aantal_zitplaatsen);
+    if(v.massa_ledig_voertuig)sf('f-leeggewicht',''+Math.round(parseFloat(v.massa_ledig_voertuig)));
+    if(v.massa_rijklaar)sf('f-rijklaar',''+Math.round(parseFloat(v.massa_rijklaar)));
+    if(v.maximum_trekken_massa_geremd)sf('f-trekgeremd',''+Math.round(parseFloat(v.maximum_trekken_massa_geremd)));
+    if(v.maximum_massa_trekken_ongeremd)sf('f-trekongeremd',''+Math.round(parseFloat(v.maximum_massa_trekken_ongeremd)));
+    if(v.toegestane_maximum_massa_voertuig)sf('f-maxmassa',''+Math.round(parseFloat(v.toegestane_maximum_massa_voertuig)));
+    if(v.maximum_massa_samenstelling)sf('f-maxsamenstelling',''+Math.round(parseFloat(v.maximum_massa_samenstelling)));
+    if(v.wielbasis)sf('f-wielbasis',''+v.wielbasis);
+    if(v.aantal_wielen)sf('f-wielen',''+v.aantal_wielen);
+    if(v.aantal_cilinders)sf('f-cilinders',''+v.aantal_cilinders);
+    if(v.europese_voertuigcategorie)sf('f-eucat',v.europese_voertuigcategorie);
+    if(v.zuinigheidsclassificatie)sf('f-zuinigheid',v.zuinigheidsclassificatie);
     // inrichting = bijv "Sedan", "Stationwagen", "MPV" etc.
     const car=mapCar(v.inrichting||v.voertuigsoort||'');
     if(car)setSel('f-carrosserie',car);
@@ -636,7 +668,14 @@ async function submitAuto(){
     btn.textContent='Opslaan...';
     if(!window._col)throw new Error('Firebase niet gereed');
     const{addDoc,serverTimestamp}=window._fb;
-    const data={kenteken:document.getElementById('f-kenteken').value.toUpperCase().trim(),merk,model,jaar:document.getElementById('f-jaar').value,brandstof:document.getElementById('f-brandstof').value,transmissie:document.getElementById('f-transmissie').value,carrosserie:document.getElementById('f-carrosserie').value,kleur:document.getElementById('f-kleur').value,pk:document.getElementById('f-pk').value,km:document.getElementById('f-km').value,cc:document.getElementById('f-cc').value,deuren:document.getElementById('f-deuren').value,apk:document.getElementById('f-apk').value,prijs:parseInt(prijs),beschrijving:document.getElementById('f-beschrijving').value.trim(),opties:[...gekozen],fotos:uploadedUrls,datum:new Date().toISOString()};
+    const data={kenteken:document.getElementById('f-kenteken').value.toUpperCase().trim(),merk,model,jaar:document.getElementById('f-jaar').value,brandstof:document.getElementById('f-brandstof').value,transmissie:document.getElementById('f-transmissie').value,carrosserie:document.getElementById('f-carrosserie').value,kleur:document.getElementById('f-kleur').value,pk:document.getElementById('f-pk').value,km:document.getElementById('f-km').value,cc:document.getElementById('f-cc').value,deuren:document.getElementById('f-deuren').value,zitplaatsen:document.getElementById('f-zitplaatsen').value,leeggewicht:document.getElementById('f-leeggewicht').value,rijklaar:document.getElementById('f-rijklaar').value,trekgeremd:document.getElementById('f-trekgeremd').value,trekongeremd:document.getElementById('f-trekongeremd').value,
+    maxmassa:document.getElementById('f-maxmassa').value,
+    maxsamenstelling:document.getElementById('f-maxsamenstelling').value,
+    wielbasis:document.getElementById('f-wielbasis').value,
+    wielen:document.getElementById('f-wielen').value,
+    cilinders:document.getElementById('f-cilinders').value,
+    eucat:document.getElementById('f-eucat').value,
+    zuinigheid:document.getElementById('f-zuinigheid').value,apk:document.getElementById('f-apk').value,prijs:parseInt(prijs),beschrijving:document.getElementById('f-beschrijving').value.trim(),opties:[...gekozen],fotos:uploadedUrls,datum:new Date().toISOString()};
     await addDoc(window._col,{...data,aangemaakt:serverTimestamp()});
     showToast('Advertentie gepubliceerd!','success');
     resetForm();await loadAds();
@@ -647,7 +686,7 @@ async function submitAuto(){
 }window.submitAuto=submitAuto;
 
 function resetForm(){
-  ['f-kenteken','f-merk','f-model','f-jaar','f-pk','f-km','f-cc','f-apk','f-prijs','f-beschrijving'].forEach(id=>document.getElementById(id).value='');
+  ['f-kenteken','f-merk','f-model','f-jaar','f-pk','f-km','f-cc','f-zitplaatsen','f-leeggewicht','f-rijklaar','f-trekgeremd','f-trekongeremd','f-maxmassa','f-maxsamenstelling','f-wielbasis','f-wielen','f-cilinders','f-eucat','f-zuinigheid','f-apk','f-prijs','f-beschrijving'].forEach(id=>document.getElementById(id).value='');
   ['f-brandstof','f-transmissie','f-carrosserie','f-kleur','f-deuren'].forEach(id=>document.getElementById(id).selectedIndex=0);
   document.getElementById('apk-badge').style.display='none';
   document.getElementById('rdw-msg').textContent='';
