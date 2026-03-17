@@ -651,7 +651,7 @@ function renderOptsGrid(cats,cat){
   let items=cat==='Alle'?Object.values(cats).flat():cats[cat]||[];
   g.innerHTML=items.map(o=>{
     const isOn=gekozen.has(o);
-    el.dataset.opt=o;return`<div class="oi ${isOn?'on':''}" data-opt="${o.replace(/"/g,'&quot;')}" onclick="toggleOpt(this.dataset.opt,this)"><div class="ocb"><div class="tick"></div></div><span>${o}</span></div>`;
+    return`<div class="oi ${isOn?'on':''}" data-opt="${o.replace(/"/g,'&quot;')}" onclick="toggleOpt(this.dataset.opt,this)"><div class="ocb"><div class="tick"></div></div><span>${o}</span></div>`;
   }).join('');
   document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
 }
