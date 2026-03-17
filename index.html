@@ -499,7 +499,6 @@ async function rdwOpzoeken(){
     buildOpts(merk);
     huidigeMerk=merk;
     gekozen.clear();
-    if(merk&&model&&jaar) laadAIOpties(merk,model,jaar);
     setMsg('✓  '+merk+' '+model+' ('+jaar+') — standaardopties worden geladen...','ok');
     showToast('Gegevens geladen','success');
   }catch(e){
@@ -579,110 +578,8 @@ function onMerkChange(){
   gekozen.clear();
   buildOpts(m);
   // Trigger AI opties als model + jaar ook ingevuld zijn
-  const model=document.getElementById('f-model').value.trim();
-  const jaar=document.getElementById('f-jaar').value.trim();
-  if(m&&model&&jaar) scheduleAIOpties(m,model,jaar);
 }
 window.onMerkChange=onMerkChange;
-
-// Debounce: wacht 600ms na laatste wijziging voor AI-aanroep
-let _aiOptTimer=null;
-function scheduleAIOpties(merk,model,jaar){
-  clearTimeout(_aiOptTimer);
-  _aiOptTimer=setTimeout(()=>laadAIOpties(merk,model,jaar),600);
-}
-
-async function laadAIOpties(merk,model,jaar){
-  const key=Object.keys(DB).find(k=>k.toLowerCase()===merk.toLowerCase());
-  const md=key?DB[key]:null;
-  // Bouw beschikbare opties lijst (alle opties voor dit merk)
-  let allItems=[];
-  for(const items of Object.values(DB._base)) allItems.push(...items);
-  if(md?.plus) for(const items of Object.values(md.plus)) allItems.push(...items);
-  const skip=new Set(md?.skip||[]);
-  allItems=allItems.filter(o=>!skip.has(o));
-  const uniq=[...new Set(allItems)];
-
-  // Check browser cache eerst (voorkomt herhaalde API calls)
-  const cacheKey='ai_opties_'+merk+'_'+model+'_'+jaar;
-  const cached=sessionStorage.getItem(cacheKey);
-  if(cached){
-    try{
-      const parsed=JSON.parse(cached);
-      const standaard=new Set(parsed.standaard||[]);
-      const verwijder=new Set(parsed.verwijder||[]);
-      window._stdOpts=standaard;
-      buildOptsWithAI(merk,standaard,verwijder);
-      gekozen=new Set([...standaard]);
-      renderOptsGrid(merkOpts,huidigeCat);
-      document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
-      showToast(standaard.size+' standaardopties geladen (cache)','success');
-      return;
-    }catch(e){}
-  }
-
-  // Toon loading state in opties sectie
-  setOptsLoading(true);
-
-  const prompt=`Je bent een expert op het gebied van auto-specificaties. Geef voor de ${merk} ${model} (bouwjaar ${jaar}) precies aan:
-
-1. Welke van de onderstaande opties STANDAARD (seriematig) geleverd werden op dit model in dit bouwjaar?
-2. Welke opties zijn NIET van toepassing of NIET beschikbaar voor dit specifieke model (bijv. een optie die exclusief voor een ander merk/model is)?
-
-Beschikbare opties:
-${uniq.join('\n')}
-
-Reageer ALLEEN met een JSON-object in dit exacte formaat, geen uitleg:
-{
-  "standaard": ["optie1", "optie2"],
-  "verwijder": ["optie3", "optie4"]
-}
-
-Regels:
-- "standaard": alleen opties die echt seriematig geleverd werden op dit bouwjaar/model. Wees nauwkeurig — liever te weinig dan te veel.
-- "verwijder": opties die technisch of commercieel onmogelijk zijn voor dit merk/model (bijv. BMW-specifieke pakketten op een Mercedes, of functies die dit model nooit had).
-- Gebruik EXACT dezelfde spelling als in de lijst hierboven.
-- Geef alleen opties terug die in de lijst staan.`;
-
-  try{
-    const payload={model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'user',content:prompt}]};
-    const r=await fetch('https://carcms.handelsondernemingh-smit.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
-    if(!r.ok) throw new Error('Worker fout '+r.status);
-    const data=await r.json();
-    const raw=data.choices?.[0]?.message?.content||'{}';
-    console.log('AI raw response:', raw.slice(0,200));
-    // Extract JSON from response (handles markdown fences, plain text, etc.)
-    let clean=raw.replace(/```json|```/g,'').trim();
-    // Find first { and last } in case there's surrounding text
-    const first=clean.indexOf('{'), last=clean.lastIndexOf('}');
-    if(first!==-1&&last!==-1) clean=clean.slice(first,last+1);
-    const parsed=JSON.parse(clean);
-    const standaard=new Set(parsed.standaard||[]);
-    const verwijder=new Set(parsed.verwijder||[]);
-    window._stdOpts=standaard;
-    // Sla op in browser cache voor deze sessie
-    try{sessionStorage.setItem(cacheKey,JSON.stringify(parsed));}catch(e){}
-    buildOptsWithAI(merk,standaard,verwijder);
-    gekozen=new Set([...standaard]);
-    renderOptsGrid(merkOpts,huidigeCat);
-    document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
-    showToast(standaard.size+' standaardopties ingevuld voor '+merk+' '+model+' ('+jaar+')','success');
-  }catch(e){
-    console.warn('AI opties niet beschikbaar, gebruik lokale opties:',e.message);
-    buildOpts(merk);
-  }finally{
-    setOptsLoading(false);
-  }
-}
-
-function setOptsLoading(on){
-  const g=document.getElementById('opts-grid');
-  const bar=document.getElementById('cat-bar');
-  if(on){
-    bar.innerHTML='';
-    g.innerHTML=`<div class="no-opts" style="display:flex;align-items:center;gap:8px"><span class="spin"></span> AI laadt standaardopties voor dit model...</div>`;
-  }
-}
 
 function buildOpts(merk){
   const key=Object.keys(DB).find(k=>k.toLowerCase()===merk.toLowerCase());
@@ -693,25 +590,6 @@ function buildOpts(merk){
   const skip=new Set(md?.skip||[]);
   for(const c in cats)cats[c]=cats[c].filter(o=>!skip.has(o));
   merkOpts=cats;huidigeCat='Alle';renderCatBar(cats);renderOptsGrid(cats,'Alle');
-}
-
-function buildOptsWithAI(merk,standaard,verwijder){
-  const key=Object.keys(DB).find(k=>k.toLowerCase()===merk.toLowerCase());
-  const md=key?DB[key]:null;
-  let cats={};
-  for(const[c,items]of Object.entries(DB._base))cats[c]=[...items];
-  if(md?.plus)for(const[c,items]of Object.entries(md.plus))cats[c]=[...items];
-  const skip=new Set([...(md?.skip||[]),...verwijder]);
-  for(const c in cats)cats[c]=cats[c].filter(o=>!skip.has(o));
-  // Sort: standaard opties bovenaan per categorie
-  for(const c in cats){
-    cats[c].sort((a,b)=>{
-      const aStd=standaard.has(a)?0:1;
-      const bStd=standaard.has(b)?0:1;
-      return aStd-bStd;
-    });
-  }
-  merkOpts=cats;huidigeCat='Alle';renderCatBar(cats);
 }
 
 function renderCatBar(cats){
@@ -725,10 +603,9 @@ function renderOptsGrid(cats,cat){
   let items=cat==='Alle'?Object.values(cats).flat():cats[cat]||[];
   g.innerHTML=items.map(o=>{
     const isOn=gekozen.has(o);
-    const isStd=window._stdOpts&&window._stdOpts.has(o);
     return`<div class="oi ${isOn?'on':''}" onclick="toggleOpt('${o.replace(/'/g,"\\'")}',this)">
       <div class="ocb"><div class="tick"></div></div>
-      <span>${o}${isStd?'<span class="std-tag">STD</span>':''}</span>
+    return`<div class="oi ${isOn?'on':''}" onclick="toggleOpt('${o.replace(/'/g,"\\'")}',this)"><div class="ocb"><div class="tick"></div></div><span>${o}</span></div>`;
     </div>`;
   }).join('');
   document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
@@ -763,7 +640,6 @@ function resetForm(){
   document.getElementById('rdw-msg').textContent='';
   document.getElementById('rdw-input').value='';
   gekozen.clear();
-  window._stdOpts=null;
   document.getElementById('opts-grid').innerHTML='<div class="no-opts">Vul eerst het merk in voor merkspecifieke opties.</div>';
   document.getElementById('opts-count').textContent='0 geselecteerd';
   document.getElementById('cat-bar').innerHTML='';
