@@ -626,11 +626,11 @@ Regels:
 - Geef alleen opties terug die in de lijst staan.`;
 
   try{
-    const payload={model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]};
-    const r=await fetch('https://carcms.handelsondernemingh-smit.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
+    const payload={model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}};
+    const r=await fetch('https://carcms.handelsondernemingh-smit.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
     if(!r.ok) throw new Error('Worker fout '+r.status);
     const data=await r.json();
-    const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
+    const raw=data.choices?.[0]?.message?.content||'{}';
     const clean=raw.replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(clean);
     const standaard=new Set(parsed.standaard||[]);
@@ -844,10 +844,10 @@ Schrijf 3-4 aantrekkelijke zinnen. Geen opsomming, geen koptekst, gewoon lopende
     status.innerHTML='<span class="ai-cursor"></span> AI schrijft advertentietekst...';
     textarea.value='';
 
-    const resp=await fetch('https://carcms.handelsondernemingh-smit.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(15000)});
+    const resp=await fetch('https://carcms.handelsondernemingh-smit.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'gpt-4o-mini',max_tokens:400,messages:[{role:'user',content:prompt}]}),signal:AbortSignal.timeout(15000)});
     if(!resp.ok) throw new Error('Worker fout '+resp.status);
     const rd=await resp.json();
-    const tekst=rd.content?.find(b=>b.type==='text')?.text||'';
+    const tekst=rd.choices?.[0]?.message?.content||'';
     if(!tekst) throw new Error('Lege respons');
 
     status.textContent='';
