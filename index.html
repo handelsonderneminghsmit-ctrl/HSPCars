@@ -386,24 +386,18 @@ async function rdwOpzoeken(){
     // sgfe-77wx = APK vervaldatum
     // 8ys7-d773 = brandstof per voertuig (brandstof_omschrijving, nettomaximumvermogen in kW)
     // 3huj-srit = as/rijden (aantal_assen, wielbasis — géén transmissie)
-    // sghb-dzxx = carrosserie kleur (eerste_kleur)
+    // iosu-7ptp = voertuig kleur (eerste_kleur, tweede_kleur)
+    // Kleur zit ook in basisdata m9d7-ebf2 als eerste_kleur
     const[basis,apk,brand,as3,kleur]=await Promise.all([
       safe(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`),
       safe(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`),
-      safe(`https://opendata.rdw.nl/resource/sghb-dzxx.json?kenteken=${raw}`),
+      safe(`https://opendata.rdw.nl/resource/iosu-7ptp.json?kenteken=${raw}`),
     ]);
 
     if(!basis.length){setMsg('Geen voertuig gevonden voor dit kenteken','err');return;}
     const v=basis[0];
-
-    // Debug: log alle velden zodat je kunt zien wat er binnenkomt
-    console.log('RDW basis:',v);
-    console.log('RDW brandstof:',brand[0]);
-    console.log('RDW as:',as3[0]);
-    console.log('RDW kleur:',kleur[0]);
-    console.log('RDW apk:',apk[0]);
 
     // ── Basis velden ──────────────────────────────────────────────────────
     const merk=tc(v.merk||'');
@@ -479,15 +473,19 @@ async function rdwOpzoeken(){
     if(trans) setSel('f-transmissie',trans);
 
     // ── Kleur ─────────────────────────────────────────────────────────────
-    // sghb-dzxx: eerste_kleur = bv "ZWART", "WIT", "GRIJS", "BLAUW" etc. (hoofdletters)
-    if(kleur.length){
-      const k=mapKleur(kleur[0].eerste_kleur||kleur[0].basiskleur||'');
-      if(k)setSel('f-kleur',k);
-    }
-    // Fallback: basisdata eerste_kleur
-    if(!document.getElementById('f-kleur').value){
-      const k=mapKleur(v.eerste_kleur||'');
-      if(k)setSel('f-kleur',k);
+    // iosu-7ptp geeft eerste_kleur als "ZWART","WIT","ROOD" etc.
+    // Basisdata heeft ook eerste_kleur. Probeer beide.
+    {
+      let k='';
+      if(kleur.length) k=mapKleur(kleur[0].eerste_kleur||kleur[0].tweede_kleur||'');
+      if(!k) k=mapKleur(v.eerste_kleur||v.tweede_kleur||'');
+      if(!k){
+        const allStr=Object.values(v).map(x=>String(x||'').toUpperCase()).join(' ');
+        for(const kn of ['ZWART','WIT','GRIJS','BLAUW','ROOD','GROEN','GEEL','ORANJE','BRUIN','ZILVER','BEIGE','ANTRACIET']){
+          if(allStr.includes(kn)){k=mapKleur(kn);if(k)break;}
+        }
+      }
+      if(k) setSel('f-kleur',k);
     }
 
     // ── APK ───────────────────────────────────────────────────────────────
@@ -632,35 +630,29 @@ Regels:
 - Geef alleen opties terug die in de lijst staan.`;
 
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    // Gebruik corsproxy.io als tussenpersoon (CORS fix voor GitHub Pages)
+    const payload={model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]};
+    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const resp=await fetch(proxyUrl,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:prompt}]
-      })
+      body:JSON.stringify(payload)
     });
     if(!resp.ok) throw new Error('API '+resp.status);
     const data=await resp.json();
     const raw=data.content?.find(b=>b.type==='text')?.text||'{}';
-    // Strip markdown fences if present
     const clean=raw.replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(clean);
     const standaard=new Set(parsed.standaard||[]);
     const verwijder=new Set(parsed.verwijder||[]);
     window._stdOpts=standaard;
-
-    // Rebuild cats without removed items, mark standard ones
     buildOptsWithAI(merk,standaard,verwijder);
-    // Auto-select standard options
     gekozen=new Set([...standaard]);
     renderOptsGrid(merkOpts,huidigeCat);
     document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
     showToast(`${standaard.size} standaardopties ingevuld voor ${merk} ${model} (${jaar})`,'success');
   }catch(e){
     console.warn('AI opties fout:',e);
-    // Fallback: gewoon normaal buildOpts zonder AI
     buildOpts(merk);
   }finally{
     setOptsLoading(false);
@@ -862,57 +854,35 @@ Schrijf 3-4 aantrekkelijke zinnen. Geen opsomming, geen koptekst, gewoon lopende
     status.innerHTML='<span class="ai-cursor"></span> AI schrijft advertentietekst...';
     textarea.value='';
 
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    // Gebruik corsproxy.io als tussenpersoon (CORS fix voor GitHub Pages)
+    const proxyUrl='https://corsproxy.io/?'+encodeURIComponent('https://api.anthropic.com/v1/messages');
+    const resp=await fetch(proxyUrl,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         model:'claude-sonnet-4-20250514',
         max_tokens:400,
-        stream:true,
         messages:[{role:'user',content:prompt}]
       })
     });
 
-    if(!resp.ok){
-      // Fallback: non-streaming
-      const errData=await resp.json().catch(()=>({}));
-      throw new Error(errData.error?.message||'API fout '+resp.status);
-    }
+    if(!resp.ok) throw new Error('API fout '+resp.status);
+    const data=await resp.json();
+    const tekst=data.content?.find(b=>b.type==='text')?.text||'';
+    if(!tekst) throw new Error('Lege respons');
 
-    const reader=resp.body.getReader();
-    const decoder=new TextDecoder();
-    let buffer='';
-    textarea.value='';
     status.textContent='';
-
-    while(true){
-      const{done,value}=await reader.read();
-      if(done)break;
-      buffer+=decoder.decode(value,{stream:true});
-      const lines=buffer.split('\n');
-      buffer=lines.pop();
-      for(const line of lines){
-        if(!line.startsWith('data: '))continue;
-        const data=line.slice(6).trim();
-        if(data==='[DONE]')continue;
-        try{
-          const json=JSON.parse(data);
-          if(json.type==='content_block_delta'&&json.delta?.type==='text_delta'){
-            textarea.value+=json.delta.text;
-          }
-        }catch(e){}
-      }
-    }
-    status.textContent='✓ Tekst gegenereerd — bewerk naar wens';
-    status.style.color='var(--green)';
-    setTimeout(()=>{status.textContent='';status.style.color='';},4000);
+    typewriterEffect(textarea,tekst.trim(),()=>{
+      status.textContent='✓ Tekst gegenereerd — bewerk naar wens';
+      status.style.color='var(--green)';
+      setTimeout(()=>{status.textContent='';status.style.color='';},4000);
+    });
   }catch(e){
     console.error('AI fout:',e);
-    // Fallback: generate locally
     status.textContent='';
     const fallback=buildFallbackTekst({merk,model,jaar,kleur,brandstof,transmissie,pk,km:kmStr,opties,apkStr});
     typewriterEffect(textarea,fallback,()=>{
-      status.textContent='✓ Tekst gegenereerd';
+      status.textContent='✓ Tekst gegenereerd (lokaal)';
       status.style.color='var(--green)';
       setTimeout(()=>{status.textContent='';status.style.color='';},3000);
     });
