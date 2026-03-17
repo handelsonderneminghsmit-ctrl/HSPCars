@@ -603,6 +603,24 @@ async function laadAIOpties(merk,model,jaar){
   allItems=allItems.filter(o=>!skip.has(o));
   const uniq=[...new Set(allItems)];
 
+  // Check browser cache eerst (voorkomt herhaalde API calls)
+  const cacheKey='ai_opties_'+merk+'_'+model+'_'+jaar;
+  const cached=sessionStorage.getItem(cacheKey);
+  if(cached){
+    try{
+      const parsed=JSON.parse(cached);
+      const standaard=new Set(parsed.standaard||[]);
+      const verwijder=new Set(parsed.verwijder||[]);
+      window._stdOpts=standaard;
+      buildOptsWithAI(merk,standaard,verwijder);
+      gekozen=new Set([...standaard]);
+      renderOptsGrid(merkOpts,huidigeCat);
+      document.getElementById('opts-count').textContent=gekozen.size+' geselecteerd';
+      showToast(standaard.size+' standaardopties geladen (cache)','success');
+      return;
+    }catch(e){}
+  }
+
   // Toon loading state in opties sectie
   setOptsLoading(true);
 
@@ -642,6 +660,8 @@ Regels:
     const standaard=new Set(parsed.standaard||[]);
     const verwijder=new Set(parsed.verwijder||[]);
     window._stdOpts=standaard;
+    // Sla op in browser cache voor deze sessie
+    try{sessionStorage.setItem(cacheKey,JSON.stringify(parsed));}catch(e){}
     buildOptsWithAI(merk,standaard,verwijder);
     gekozen=new Set([...standaard]);
     renderOptsGrid(merkOpts,huidigeCat);
