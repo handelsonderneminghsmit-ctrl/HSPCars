@@ -626,12 +626,17 @@ Regels:
 - Geef alleen opties terug die in de lijst staan.`;
 
   try{
-    const payload={model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}};
+    const payload={model:'gpt-4o-mini',max_tokens:1000,messages:[{role:'user',content:prompt}]};
     const r=await fetch('https://carcms.handelsondernemingh-smit.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(15000)});
     if(!r.ok) throw new Error('Worker fout '+r.status);
     const data=await r.json();
     const raw=data.choices?.[0]?.message?.content||'{}';
-    const clean=raw.replace(/```json|```/g,'').trim();
+    console.log('AI raw response:', raw.slice(0,200));
+    // Extract JSON from response (handles markdown fences, plain text, etc.)
+    let clean=raw.replace(/```json|```/g,'').trim();
+    // Find first { and last } in case there's surrounding text
+    const first=clean.indexOf('{'), last=clean.lastIndexOf('}');
+    if(first!==-1&&last!==-1) clean=clean.slice(first,last+1);
     const parsed=JSON.parse(clean);
     const standaard=new Set(parsed.standaard||[]);
     const verwijder=new Set(parsed.verwijder||[]);
