@@ -390,33 +390,136 @@ async function rdwOpzoeken(){
   btn.disabled=true;btn.innerHTML='<span class="spin"></span> Ophalen...';
   setMsg('RDW opendata ophalen...','loading');
   try{
-    const[vRes,apkRes]=await Promise.all([
+    // Parallel fetch: basisdata, APK, brandstof-details, as-data (vermogen/transmissie), kleur
+    const[vRes,apkRes,bfRes,asRes,kleurRes]=await Promise.all([
       fetch(`https://opendata.rdw.nl/resource/m9d7-ebf2.json?kenteken=${raw}`).then(r=>r.json()),
-      fetch(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`).then(r=>r.json())
+      fetch(`https://opendata.rdw.nl/resource/sgfe-77wx.json?kenteken=${raw}`).then(r=>r.json()),
+      fetch(`https://opendata.rdw.nl/resource/8ys7-d773.json?kenteken=${raw}`).then(r=>r.json()),
+      fetch(`https://opendata.rdw.nl/resource/3huj-srit.json?kenteken=${raw}`).then(r=>r.json()),
+      fetch(`https://opendata.rdw.nl/resource/sghb-dzxx.json?kenteken=${raw}`).then(r=>r.json()),
     ]);
+
     if(!vRes.length){setMsg('Geen voertuig gevonden voor dit kenteken','err');return;}
     const v=vRes[0];
-    const merk=tc(v.merk||''),model=tc(v.handelsbenaming||v.type_en_variant||'');
+
+    // ── Basis ──
+    const merk=tc(v.merk||'');
+    const model=tc(v.handelsbenaming||v.type_en_variant||'');
     const jaar=v.datum_eerste_toelating?v.datum_eerste_toelating.slice(0,4):'';
-    const bf=mapBF(v.brandstof_omschrijving||(v.brandstof&&v.brandstof[0]?.brandstof_omschrijving)||'');
-    sf('f-kenteken',raw);sf('f-merk',merk);sf('f-model',model);sf('f-jaar',jaar);
+    sf('f-kenteken',raw);
+    sf('f-merk',merk);
+    sf('f-model',model);
+    sf('f-jaar',jaar);
     if(v.cilinderinhoud)sf('f-cc',v.cilinderinhoud);
     if(v.aantal_deuren)setSel('f-deuren',''+v.aantal_deuren);
-    if(bf)setSel('f-brandstof',bf);
     const car=mapCar(v.inrichting||'');if(car)setSel('f-carrosserie',car);
+
+    // ── Brandstof (uit brandstof-endpoint, valt terug op basisdata) ──
+    let bf='';
+    if(bfRes.length){
+      // brandstof endpoint: brandstof_omschrijving per brandstof record
+      const bfOmsch=bfRes[0].brandstof_omschrijving||'';
+      bf=mapBF(bfOmsch);
+    }
+    if(!bf){
+      // fallback: basisdata brandstof array of veld
+      const bfRaw=v.brandstof_omschrijving||(v.brandstof&&v.brandstof[0]?.brandstof_omschrijving)||'';
+      bf=mapBF(bfRaw);
+    }
+    if(bf)setSel('f-brandstof',bf);
+
+    // ── Vermogen (uit as-data / brandstof endpoint) ──
+    // Vermogen staat in het brandstof-endpoint als nettomaximumvermogen (in kW)
+    let pk='';
+    if(bfRes.length){
+      const kw=parseFloat(bfRes[0].nettomaximumvermogen||0);
+      if(kw>0) pk=Math.round(kw*1.35962); // kW → PK
+    }
+    // Fallback: maximumvermogen uit basisdata
+    if(!pk&&v.maximumvermogen_motor_rijklaar){
+      const kw=parseFloat(v.maximumvermogen_motor_rijklaar||0);
+      if(kw>0) pk=Math.round(kw*1.35962);
+    }
+    if(pk)sf('f-pk',''+pk);
+
+    // ── Transmissie (as-data endpoint: 3huj-srit) ──
+    if(asRes.length){
+      const trans=mapTrans(asRes[0].aandrijving||asRes[0].type_aandrijving||'');
+      if(trans)setSel('f-transmissie',trans);
+    }
+
+    // ── Kleur (kleur endpoint: sghb-dzxx) ──
+    if(kleurRes.length){
+      const kleurRaw=kleurRes[0].eerste_kleur||kleurRes[0].basiskleur||'';
+      const kleur=mapKleur(kleurRaw);
+      if(kleur)setSel('f-kleur',kleur);
+    }
+
+    // ── APK ──
     if(apkRes.length){
       const s=apkRes[0].vervaldatum_apk;
       if(s&&s.length>=8){sf('f-apk',s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8));checkApk();}
     }
+
     onMerkChange();
     setMsg('✓  '+merk+' '+model+' ('+jaar+') gevonden','ok');
     showToast('RDW gegevens geladen','success');
-  }catch(e){setMsg('Fout bij ophalen — controleer verbinding','err');}
+  }catch(e){
+    console.error('RDW fout:',e);
+    setMsg('Fout bij ophalen — controleer verbinding','err');
+  }
   finally{btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 10L13 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Kenteken opzoeken';}
 }window.rdwOpzoeken=rdwOpzoeken;
 
 function tc(s){return s.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());}
-function mapBF(s){const l=s.toLowerCase();if(l.includes('hybride')||l.includes('hybrid'))return l.includes('plug')?'Hybride (PHEV)':'Hybride (mild)';return{benzine:'Benzine',diesel:'Diesel',elektrisch:'Elektrisch',lpg:'LPG',cng:'CNG'}[l]||'';}
+
+function mapBF(s){
+  if(!s)return'';
+  const l=s.toLowerCase();
+  if(l.includes('plug')||l.includes('phev')||l.includes('plug-in'))return'Hybride (PHEV)';
+  if(l.includes('hybride')||l.includes('hybrid'))return'Hybride (mild)';
+  if(l.includes('elektr'))return'Elektrisch';
+  if(l.includes('waterstof'))return'Elektrisch';
+  if(l.includes('benzine'))return'Benzine';
+  if(l.includes('diesel'))return'Diesel';
+  if(l.includes('lpg'))return'LPG';
+  if(l.includes('cng')||l.includes('aardgas'))return'CNG';
+  return'';
+}
+
+function mapTrans(s){
+  if(!s)return'';
+  const l=s.toLowerCase();
+  if(l.includes('automaat')||l.includes('automatic'))return'Automaat';
+  if(l.includes('dsg')||l.includes('s-tronic')||l.includes('dct'))return'Semi-automaat (DSG)';
+  if(l.includes('pdk')||l.includes('pdc'))return'Semi-automaat (PDK)';
+  if(l.includes('hand')||l.includes('manual')||l.includes('mechanisch'))return'Handgeschakeld';
+  return'';
+}
+
+function mapKleur(s){
+  if(!s)return'';
+  const l=s.toLowerCase().trim();
+  const map={
+    'zwart':'Zwart','black':'Zwart',
+    'wit':'Wit','white':'Wit','creme':'Beige / Crème','crème':'Beige / Crème','beige':'Beige / Crème','ivoor':'Beige / Crème',
+    'zilver':'Zilver','silver':'Zilver','grijs':'Grijs','gray':'Grijs','grey':'Grijs',
+    'blauw':'Blauw','blue':'Blauw','donkerblauw':'Donkerblauw','navy':'Donkerblauw',
+    'rood':'Rood','red':'Rood','bordeaux':'Bordeaux','wijnrood':'Bordeaux','donkerrood':'Bordeaux',
+    'groen':'Groen','green':'Groen',
+    'bruin':'Bruin','brown':'Bruin','koper':'Bruin','bronze':'Bruin',
+    'oranje':'Oranje','orange':'Oranje',
+    'geel':'Geel','yellow':'Geel',
+  };
+  // Direct match
+  if(map[l])return map[l];
+  // Partial match
+  for(const[k,v] of Object.entries(map)){if(l.includes(k))return v;}
+  // Donkergrijs detection
+  if(l.includes('anthra')||l.includes('donker')&&l.includes('grij'))return'Donkergrijs';
+  return'';
+}
+
 function mapCar(s){const l=s.toLowerCase();if(l.includes('sedan'))return'Sedan';if(l.includes('hatch'))return'Hatchback';if(l.includes('station'))return'Stationwagen';if(l.includes('suv')||l.includes('terrein'))return'SUV / Crossover';if(l.includes('coup'))return'Coupé';if(l.includes('cabrio'))return'Cabriolet';if(l.includes('mpv')||l.includes('van'))return'MPV / Van';return'';}
 function sf(id,val){if(val)document.getElementById(id).value=val;}
 function setSel(id,val){const el=document.getElementById(id);for(const o of el.options)if(o.text.toLowerCase().startsWith(val.toLowerCase())){el.value=o.value;return;}}
